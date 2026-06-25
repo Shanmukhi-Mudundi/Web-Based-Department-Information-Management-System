@@ -12,7 +12,7 @@ A full-stack web portal for the CSE (AI & ML) department at BVRIT Hyderabad Coll
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
-- [Screenshots/Demo](#screenshots/demo)
+- [Screenshots/Demo](#screenshotsdemo)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Backend Setup](#backend-setup)
