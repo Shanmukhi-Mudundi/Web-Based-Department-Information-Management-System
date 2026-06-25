@@ -1,9 +1,9 @@
 # Web-Based Department Information Management System
 
-[![License](https://img.shields.io/badge/license-Academic-lightgrey)]()
+[![License](https://img.shields.io/badge/License-Academic-lightgrey)]()
 [![Java](https://img.shields.io/badge/Java-21%2B-blue)]()
 [![MongoDB](https://img.shields.io/badge/Database-MongoDB-green)]()
-[![Status](https://img.shields.io/badge/status-Development-orange)]()
+[![Status](https://img.shields.io/badge/Status-Development-orange)]()
 
 A full-stack web portal for the CSE (AI & ML) department at BVRIT Hyderabad College of Engineering for Women. It centralizes departmental data — placements, timetables, announcements, achievements, semester toppers, weekly reports, and grievances — into a single platform with role-based access control.
 
