@@ -66,12 +66,9 @@ A full-stack web portal for the CSE (AI & ML) department at BVRIT Hyderabad Coll
 ```
 
 ## Screenshots/Demo
-![Home page screenshot](docs/images/image-1.png)
-
-[![Home page screenshot](docs/images/image-1.png)](docs/images/screenshot-home.png)
-
 <img src="docs/images/image-1.png" width="700" alt="Home page screenshot">
-
+<img src="docs/images/image-2.png" width="700" alt="Announcements screenshot">
+<img src="docs/images/image-3.png" width="700" alt="Achievements screenshot">
 
 ## Getting Started
 
