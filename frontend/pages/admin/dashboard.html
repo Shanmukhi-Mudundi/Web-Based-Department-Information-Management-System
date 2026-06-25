@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | CSE (AI & ML)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <header class="admin-header">
+      <div class="admin-brand">
+        <h1>Admin Control Center</h1>
+        <p>Manage department content, files, and weekly communication from a single workspace.</p>
+      </div>
+      <nav class="admin-nav">
+        <a class="active" href="./dashboard.html">Dashboard</a>
+        <a href="./announcements-admin.html">Announcements</a>
+        <a href="./achievements-admin.html">Achievements</a>
+        <a href="./timetables-admin.html">Timetables</a>
+        <a href="./weekly-reports-admin.html">Weekly Reports</a>
+        <a href="./complaints-admin.html">Complaints</a>
+        <a href="../index.html">Back to Site</a>
+        <a href="#" id="logoutBtn">Logout</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-grid">
+      <div class="hero-copy">
+        <div>
+          <p class="eyebrow">Department Operations</p>
+          <h2>Run every update from one admin workspace.</h2>
+        </div>
+        <p>Use the modules below to publish notices, highlight wins, upload timetable files, and keep weekly reporting aligned with the public site.</p>
+        <div class="chip-row">
+          <span class="chip">Fast content updates</span>
+          <span class="chip">Shared admin styling</span>
+          <span class="chip">API-ready modules</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-grid">
+      <div class="stack">
+        <section class="dashboard-grid">
+          <article class="card shortcut-card">
+            <span class="card-meta">Notices</span>
+            <div>
+              <h3>Announcements</h3>
+              <p>Create time-sensitive notices, surface important alerts, and remove outdated posts without touching the public template.</p>
+            </div>
+            <a href="./announcements-admin.html">Open announcements manager</a>
+          </article>
+          <article class="card shortcut-card">
+            <span class="card-meta">Highlights</span>
+            <div>
+              <h3>Achievements</h3>
+              <p>Add student, faculty, and department milestones with a clearer editor and a cleaner list view.</p>
+            </div>
+            <a href="./achievements-admin.html">Open achievements manager</a>
+          </article>
+          <article class="card shortcut-card">
+            <span class="card-meta">Files</span>
+            <div>
+              <h3>Timetables</h3>
+              <p>Upload timetable documents, verify file details, and keep the latest schedule accessible from one screen.</p>
+            </div>
+            <a href="./timetables-admin.html">Open timetable manager</a>
+          </article>
+          <article class="card shortcut-card">
+            <span class="card-meta">Reporting</span>
+            <div>
+              <h3>Weekly Reports</h3>
+              <p>Publish departmental progress updates, revise existing entries, and maintain report history with token-based actions.</p>
+            </div>
+            <a href="./weekly-reports-admin.html">Open weekly reports manager</a>
+          </article>
+          <article class="card shortcut-card">
+            <span class="card-meta">Restricted</span>
+            <div>
+              <h3>Complaints</h3>
+              <p>Review grievance submissions in a protected page limited to the approved complaint reviewers.</p>
+            </div>
+            <a href="./complaints-admin.html">Open complaints desk</a>
+          </article>
+        </section>
+      </div>
+
+      <aside class="side-panel">
+        <div class="side-block">
+          <p class="eyebrow">Quick Start</p>
+          <h3>Use the managers directly</h3>
+          <ul class="info-list">
+            <li>Open the module that matches the content you want to update.</li>
+            <li>Create or upload new content using the primary form at the top of each page.</li>
+            <li>Review current entries in the lower table before removing anything.</li>
+          </ul>
+        </div>
+        <div class="side-block">
+          <p class="eyebrow">Access Note</p>
+          <h3>Admin-only pages</h3>
+          <p>Authentication is still enforced through the admin guard script. The UI is ready for the protected workflow your team finalizes.</p>
+        </div>
+      </aside>
+    </section>
+
+    <p class="page-note">Authentication will be wired by your team. These pages are prepared for admin-only access and API-backed updates.</p>
+  </div>
+  <script type="module" src="../../assets/js/admin-guard.js"></script>
+</body>
+</html>

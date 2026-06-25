@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semester Wise Toppers | CSE (AI & ML)</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/toppers.css">
+</head>
+<body class="theme-page toppers-page">
+
+<iframe
+    class="site-chrome site-chrome--header"
+    src="../components/header.html"
+    scrolling="no">
+</iframe>
+
+<main class="page-shell">
+    <section class="page-hero">
+        <div class="page-hero__layout">
+            <div>
+                <h1>Semester Toppers</h1>
+                <div class="page-hero__actions">
+                    <a href="index.html" class="ghost-button">Back Home</a>
+                    <a href="#yearFilter" class="cta-button">Filter Results</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content-panel">
+        <div class="filter-bar">
+            <div class="filter-mode" role="tablist" aria-label="Topper filter mode">
+                <button class="filter-chip is-active" id="yearToggle" type="button" data-mode="year" aria-pressed="true">By Year</button>
+                <button class="filter-chip" id="semesterToggle" type="button" data-mode="semester" aria-pressed="false">By Semester</button>
+            </div>
+            <div class="filter-field">
+                <label for="yearFilter" id="topperFilterLabel">Academic Year</label>
+                <select id="yearFilter" class="filter-select">
+                    <option value="all">All Academic Years</option>
+                </select>
+            </div>
+        </div>
+        <section class="toppers-grid">
+            <p>Loading toppers...</p>
+        </section>
+    </section>
+</main>
+
+<iframe
+    class="site-chrome site-chrome--footer"
+    src="../components/footer.html"
+    scrolling="no">
+</iframe>
+
+<script>
+const API_BASE =
+    document.querySelector('meta[name="api-base"]')?.getAttribute("content")?.trim() ||
+    "http://localhost:8081";
+
+function normalizeList(data) {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.items)) return data.items;
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data?.records)) return data.records;
+    if (Array.isArray(data?.result)) return data.result;
+    if (Array.isArray(data?.content)) return data.content;
+    return [];
+}
+
+function getNestedValue(obj, path) {
+    if (!obj || !path) return undefined;
+    const parts = path.split(".");
+    let current = obj;
+    for (const part of parts) {
+        if (current == null || typeof current !== "object") return undefined;
+        current = current[part];
+    }
+    return current;
+}
+
+function findLooseValue(obj, names) {
+    if (!obj || typeof obj !== "object") return undefined;
+
+    for (const name of names) {
+        const direct = obj[name];
+        if (direct !== undefined && direct !== null && direct !== "") return direct;
+        if (name.includes(".")) {
+            const nested = getNestedValue(obj, name);
+            if (nested !== undefined && nested !== null && nested !== "") return nested;
+        }
+    }
+
+    const normalize = (value) => String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const lookup = new Map();
+    Object.keys(obj).forEach((key) => lookup.set(normalize(key), key));
+
+    for (const name of names) {
+        const key = lookup.get(normalize(name));
+        if (key && obj[key] !== undefined && obj[key] !== null && obj[key] !== "") {
+            return obj[key];
+        }
+    }
+
+    return undefined;
+}
+
+function hasMeaningfulTopperData(item) {
+    return Boolean(
+        findLooseValue(item, [
+            "name",
+            "studentName",
+            "topperName",
+            "fullName",
+            "rollNumber",
+            "rollNo",
+            "rollno",
+            "roll_no",
+            "cgpa",
+            "gpa",
+            "sgpa",
+            "academicYear",
+            "academic_year",
+            "year",
+            "batch",
+            "semester",
+            "sem",
+            "semesterNo",
+            "semesterNumber",
+            "student.name",
+            "student.rollNo",
+            "student.cgpa",
+            "student.academicYear",
+            "student.semester"
+        ])
+    );
+}
+
+function appendLabeledText(container, label, value) {
+    const strong = document.createElement("strong");
+    strong.textContent = label + ":";
+    container.append(strong, document.createTextNode(" " + value));
+}
+
+function createTopperCard(item, index) {
+    const card = document.createElement("article");
+    card.className = "topper-card";
+
+    const semester = document.createElement("h2");
+    const semesterRaw = findLooseValue(item, [
+        "semester",
+        "sem",
+        "semesterNumber",
+        "semesterNo",
+        "semNo",
+        "semster",
+        "Semester",
+        "SEM",
+        "student.semester",
+        "student.sem",
+        "details.semester",
+        "data.semester"
+    ]);
+    const semesterText = semesterRaw ? String(semesterRaw) : "";
+    const semesterLabel = semesterText
+        ? (/semester/i.test(semesterText) ? semesterText : `Semester ${semesterText}`)
+        : "Topper";
+    semester.textContent = semesterLabel;
+
+    const name = document.createElement("h3");
+    name.textContent = findLooseValue(item, [
+        "name",
+        "studentName",
+        "topperName",
+        "fullName",
+        "Name",
+        "student.name",
+        "student.fullName",
+        "details.name",
+        "data.name"
+    ]) || "Student";
+
+    const semesterLine = document.createElement("p");
+    appendLabeledText(semesterLine, "Semester", semesterText ? semesterText : "N/A");
+
+    const roll = document.createElement("p");
+    const rollValue = findLooseValue(item, [
+        "rollNumber",
+        "rollNo",
+        "roll",
+        "rollno",
+        "roll_no",
+        "roll no",
+        "RollNo",
+        "Roll Number",
+        "student.rollNo",
+        "student.rollNumber",
+        "details.rollNo",
+        "details.rollNumber",
+        "details.rollno",
+        "details.roll_no",
+        "data.rollNo",
+        "data.rollNumber",
+        "data.rollno",
+        "data.roll_no"
+    ]);
+    appendLabeledText(
+        roll,
+        "Roll No",
+        rollValue !== undefined && rollValue !== null && rollValue !== "" ? String(rollValue) : "N/A"
+    );
+
+    const cgpa = document.createElement("p");
+    const cgpaValue = findLooseValue(item, [
+        "cgpa",
+        "gpa",
+        "sgpa",
+        "CGPA",
+        "student.cgpa",
+        "student.gpa",
+        "details.cgpa",
+        "data.cgpa"
+    ]);
+    appendLabeledText(
+        cgpa,
+        "CGPA",
+        cgpaValue !== undefined && cgpaValue !== null ? String(cgpaValue) : "N/A"
+    );
+
+    const batch = document.createElement("p");
+    const batchValue = findLooseValue(item, [
+        "academicYear",
+        "batch",
+        "batchYear",
+        "year",
+        "academic_year",
+        "academic year",
+        "AcademicYear",
+        "Academic Year",
+        "Year",
+        "student.academicYear",
+        "student.batch",
+        "details.academicYear",
+        "details.academic_year",
+        "details.batch",
+        "details.batchYear",
+        "data.academicYear",
+        "data.academic_year",
+        "data.batch",
+        "data.batchYear"
+    ]);
+    appendLabeledText(
+        batch,
+        "Year",
+        batchValue !== undefined && batchValue !== null && batchValue !== "" ? String(batchValue) : "N/A"
+    );
+
+    card.append(semester, name, semesterLine, roll, cgpa, batch);
+    return card;
+}
+
+function getYearValue(item) {
+    const value = findLooseValue(item, [
+        "academicYear",
+        "year",
+        "batch",
+        "batchYear",
+        "academic_year",
+        "academic year",
+        "AcademicYear",
+        "Academic Year",
+        "Year",
+        "student.academicYear",
+        "student.batch",
+        "details.academicYear",
+        "details.academic_year",
+        "details.batch",
+        "details.batchYear",
+        "data.academicYear",
+        "data.academic_year",
+        "data.batch",
+        "data.batchYear"
+    ]);
+    return value !== undefined && value !== null ? String(value).trim() : "";
+}
+
+function getSemesterValue(item) {
+    const value = findLooseValue(item, [
+        "semester",
+        "sem",
+        "semesterNumber",
+        "semesterNo",
+        "semNo",
+        "semster",
+        "Semester",
+        "SEM",
+        "student.semester",
+        "student.sem",
+        "details.semester",
+        "data.semester"
+    ]);
+    return value !== undefined && value !== null ? String(value).trim() : "";
+}
+
+function extractLeadingNumber(value) {
+    const match = String(value || "").match(/(\d+)/);
+    return match ? Number(match[1]) : Number.NEGATIVE_INFINITY;
+}
+
+function sortAcademicValuesDescending(values) {
+    return values.sort((a, b) => {
+        const yearDiff = extractLeadingNumber(b) - extractLeadingNumber(a);
+        if (yearDiff !== 0) return yearDiff;
+        return String(b).localeCompare(String(a), undefined, { numeric: true });
+    });
+}
+
+function sortSemesterValuesDescending(values) {
+    return values.sort((a, b) => {
+        const semesterDiff = extractLeadingNumber(b) - extractLeadingNumber(a);
+        if (semesterDiff !== 0) return semesterDiff;
+        return String(b).localeCompare(String(a), undefined, { numeric: true });
+    });
+}
+
+function populateFilterOptions(items, mode) {
+    const filter = document.getElementById("yearFilter");
+    const filterLabel = document.getElementById("topperFilterLabel");
+    if (!filter || !filterLabel) return;
+
+    const isYearMode = mode === "year";
+    const values = Array.from(new Set(items.map(isYearMode ? getYearValue : getSemesterValue).filter(Boolean)));
+    const sortedValues = isYearMode
+        ? sortAcademicValuesDescending(values)
+        : sortSemesterValuesDescending(values);
+
+    filter.innerHTML = "";
+    const allOption = document.createElement("option");
+    allOption.value = "all";
+    allOption.textContent = isYearMode ? "All Academic Years" : "All Semesters";
+    filter.appendChild(allOption);
+    filterLabel.textContent = isYearMode ? "Academic Year" : "Semester";
+
+    sortedValues.forEach((value) => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        filter.appendChild(option);
+    });
+}
+
+function renderToppers(data, message) {
+    const grid = document.querySelector(".toppers-grid");
+    if (!grid) return;
+
+    grid.innerHTML = "";
+
+    if (!data.length) {
+        const empty = document.createElement("p");
+        empty.textContent = message || "No toppers data available.";
+        grid.appendChild(empty);
+        return;
+    }
+
+    const sorted = data
+        .map((item, index) => {
+            const semesterRaw = getSemesterValue(item);
+            const yearRaw = getYearValue(item);
+            return {
+                item,
+                index,
+                semValue: semesterRaw ? extractLeadingNumber(semesterRaw) : null,
+                yearValue: yearRaw ? extractLeadingNumber(yearRaw) : null
+            };
+        })
+        .sort((a, b) => {
+            if (a.yearValue !== b.yearValue) {
+                if (a.yearValue === null) return 1;
+                if (b.yearValue === null) return -1;
+                return b.yearValue - a.yearValue;
+            }
+            if (a.semValue !== b.semValue) {
+                if (a.semValue === null) return 1;
+                if (b.semValue === null) return -1;
+                return b.semValue - a.semValue;
+            }
+            return a.index - b.index;
+        })
+        .map(entry => entry.item);
+
+    sorted.forEach((item, index) => grid.appendChild(createTopperCard(item, index)));
+}
+
+async function loadToppers() {
+    const grid = document.querySelector(".toppers-grid");
+    if (!grid) return;
+
+    try {
+        const apiRoot = API_BASE.replace(/\/$/, "");
+        const fetchList = async (path) => {
+            const res = await fetch(apiRoot + path, {
+                headers: { Accept: "application/json" }
+            });
+            if (!res.ok) throw new Error("Bad response");
+            return normalizeList(await res.json());
+        };
+
+        let data = [];
+
+        try {
+            data = await fetchList("/api/toppers");
+        } catch (primaryError) {
+            data = await fetchList("/api/toppers/raw");
+        }
+
+        if (!data.length || !data.some(hasMeaningfulTopperData)) {
+            try {
+                const rawData = await fetchList("/api/toppers/raw");
+                if (rawData.length) {
+                    data = rawData;
+                }
+            } catch (rawError) {
+                if (!data.length) throw rawError;
+            }
+        }
+
+        const filter = document.getElementById("yearFilter");
+        const toggleButtons = document.querySelectorAll(".filter-chip");
+        let mode = "year";
+
+        if (data.length === 0) {
+            renderToppers([], "No toppers data available.");
+            return;
+        }
+
+        populateFilterOptions(data, mode);
+
+        const renderCurrent = () => {
+            const selected = filter?.value || "all";
+            const filtered = selected === "all"
+                ? data
+                : data.filter(item => (mode === "year" ? getYearValue(item) : getSemesterValue(item)) === selected);
+            renderToppers(
+                filtered,
+                mode === "year"
+                    ? "No toppers for the selected academic year."
+                    : "No toppers for the selected semester."
+            );
+        };
+
+        renderCurrent();
+
+        if (filter) {
+            filter.addEventListener("change", renderCurrent);
+        }
+
+        toggleButtons.forEach(button => {
+            button.addEventListener("click", () => {
+                mode = button.dataset.mode || "year";
+                toggleButtons.forEach(current => {
+                    const active = current === button;
+                    current.classList.toggle("is-active", active);
+                    current.setAttribute("aria-pressed", active ? "true" : "false");
+                });
+                populateFilterOptions(data, mode);
+                renderCurrent();
+            });
+        });
+    } catch (err) {
+        console.error("Failed to load toppers:", err);
+        grid.innerHTML = "";
+        const errorMsg = document.createElement("p");
+        errorMsg.textContent = "Unable to load toppers right now.";
+        grid.appendChild(errorMsg);
+    }
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", loadToppers);
+} else {
+    loadToppers();
+}
+</script>
+
+</body>
+</html>

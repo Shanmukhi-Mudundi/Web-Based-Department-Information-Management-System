@@ -1,0 +1,56 @@
+.complaint-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    padding: 26px;
+    border-radius: 28px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(245, 238, 227, 0.96));
+    border: 1px solid rgba(40, 30, 19, 0.1);
+    box-shadow: 0 20px 44px rgba(10, 13, 28, 0.1);
+}
+
+.form-group--full {
+    grid-column: 1 / -1;
+}
+
+.form-status {
+    grid-column: 1 / -1;
+    min-height: 24px;
+    margin-top: 4px;
+    padding: 0 2px;
+    color: #6d6679;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.form-status.is-pending {
+    color: #8a4500;
+}
+
+.form-status.is-success {
+    color: #1d6a37;
+}
+
+.form-status.is-error {
+    color: #a62b1f;
+}
+
+.submit-button {
+    grid-column: 1 / -1;
+    width: max-content;
+    min-width: 220px;
+}
+
+.submit-button:disabled {
+    cursor: wait;
+    opacity: 0.72;
+    transform: none;
+    box-shadow: none;
+}
+
+@media (max-width: 720px) {
+    .complaint-form {
+        grid-template-columns: 1fr;
+        padding: 20px;
+    }
+}

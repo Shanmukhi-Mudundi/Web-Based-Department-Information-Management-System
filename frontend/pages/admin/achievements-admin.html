@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Achievements | Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <header class="admin-header">
+      <div class="admin-brand">
+        <h1>Achievements Manager</h1>
+        <p>Highlight faculty, student, and department milestones with a cleaner publishing flow.</p>
+      </div>
+      <nav class="admin-nav">
+        <a href="./dashboard.html">Dashboard</a>
+        <a href="./announcements-admin.html">Announcements</a>
+        <a class="active" href="./achievements-admin.html">Achievements</a>
+        <a href="./timetables-admin.html">Timetables</a>
+        <a href="./weekly-reports-admin.html">Weekly Reports</a>
+        <a href="./complaints-admin.html">Complaints</a>
+        <a href="../index.html">Back to Site</a>
+        <a href="#" id="logoutBtn">Logout</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-grid">
+      <div class="hero-copy">
+        <div>
+          <p class="eyebrow">Milestone Publishing</p>
+          <h2>Add a new achievement.</h2>
+        </div>
+        <p>Each record here powers the public achievements page. Use the form to capture the title, category, year, and a concise summary.</p>
+        <div class="chip-row">
+          <span class="chip">Faculty highlights</span>
+          <span class="chip">Student wins</span>
+          <span class="chip">Department milestones</span>
+        </div>
+      </div>
+        
+    </section>
+
+    <section class="content-grid">
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Create Entry</p>
+              <h3>Achievement composer</h3>
+            </div>
+            <p>Use a clean title, select the achievement type, and write a short description that fits the public card layout.</p>
+          </div>
+          <form id="achievementForm">
+            <div class="form-grid">
+              <div>
+                <label for="achievementTitle">Title</label>
+                <input id="achievementTitle" name="title" required placeholder="National-level Hackathon Winners">
+              </div>
+              <div>
+                <label for="achievementCategory">Category</label>
+                <select id="achievementCategory" name="department">
+                  <option value="Faculty Achievement">Faculty Achievement</option>
+                  <option value="Student Achievement">Student Achievement</option>
+                  <option value="Department Achievement">Department Achievement</option>
+                </select>
+              </div>
+              <div>
+                <label for="achievementYear">Year</label>
+                <input id="achievementYear" name="date" placeholder="2026">
+              </div>
+            </div>
+            <div class="field-block">
+              <label for="achievementDescription">Description</label>
+              <textarea id="achievementDescription" name="description" required placeholder="Describe the achievement in 1-2 lines."></textarea>
+            </div>
+            <div class="meta-row">
+              <button class="btn" type="submit">Save Achievement</button>
+              <button class="btn btn-outline" type="reset">Clear</button>
+            </div>
+            <p id="status" class="status"></p>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Current Records</p>
+              <h3>Saved achievements</h3>
+            </div>
+            <p>Review the records returned by the API before deleting any existing achievement.</p>
+          </div>
+          <div class="table-wrap">
+            <table class="table" id="achievementTable">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Category</th>
+                  <th>Year</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <aside class="side-panel">
+        <div class="side-block">
+          <p class="eyebrow">Checklist</p>
+          <h3>Before you publish</h3>
+          <ul class="info-list">
+            <li>Use a title that identifies the event or recognition clearly.</li>
+            <li>Pick the correct category so the record groups properly on the public page.</li>
+            <li>Prefer a short description instead of a long paragraph.</li>
+          </ul>
+        </div>
+       
+      </aside>
+    </section>
+  </div>
+
+  <script>
+    const API_BASE =
+      document.querySelector('meta[name="api-base"]')?.getAttribute("content")?.trim() ||
+      "http://localhost:8081";
+
+    const statusEl = document.getElementById("status");
+    const tableBody = document.querySelector("#achievementTable tbody");
+
+    function setStatus(message, type) {
+      statusEl.textContent = message;
+      statusEl.className = "status" + (type ? " " + type : "");
+    }
+
+    function renderRow(item) {
+      const row = document.createElement("tr");
+      const title = document.createElement("td");
+      title.textContent = item.title || "Untitled";
+      const category = document.createElement("td");
+      category.textContent = item.department || item.category || "Department Achievement";
+      const year = document.createElement("td");
+      year.textContent = item.date || item.year || "";
+      const actions = document.createElement("td");
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "btn btn-danger";
+      deleteBtn.textContent = "Delete";
+      deleteBtn.disabled = !item.id;
+      deleteBtn.addEventListener("click", () => removeAchievement(item.id));
+      actions.appendChild(deleteBtn);
+
+      row.append(title, category, year, actions);
+      tableBody.appendChild(row);
+    }
+
+    async function loadAchievements() {
+      tableBody.innerHTML = "";
+      try {
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/achievements");
+        if (!res.ok) throw new Error("Bad response");
+        const data = await res.json();
+        const items = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
+        if (items.length === 0) {
+          const emptyRow = document.createElement("tr");
+          emptyRow.innerHTML = "<td colspan='4'>No achievements available.</td>";
+          tableBody.appendChild(emptyRow);
+          return;
+        }
+        items.forEach(renderRow);
+      } catch (err) {
+        setStatus("Unable to load achievements. Check the API connection.", "error");
+      }
+    }
+
+    async function removeAchievement(id) {
+      if (!id) return;
+      try {
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/achievements/" + id, {
+          method: "DELETE"
+        });
+        if (!res.ok) throw new Error("Delete failed");
+        setStatus("Achievement deleted.", "success");
+        loadAchievements();
+      } catch (err) {
+        setStatus("Delete failed. Confirm the API endpoint.", "error");
+      }
+    }
+
+    document.getElementById("achievementForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const title = document.getElementById("achievementTitle").value.trim();
+      const description = document.getElementById("achievementDescription").value.trim();
+      const department = document.getElementById("achievementCategory").value;
+      const date = document.getElementById("achievementYear").value.trim();
+
+      const payload = { title, description, department, date };
+
+      try {
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/achievements", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error("Create failed");
+        setStatus("Achievement saved successfully.", "success");
+        event.target.reset();
+        loadAchievements();
+      } catch (err) {
+        setStatus("Save failed. Check the API endpoint.", "error");
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", loadAchievements);
+  </script>
+  <script type="module" src="../../assets/js/admin-guard.js"></script>
+</body>
+</html>

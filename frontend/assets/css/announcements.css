@@ -1,0 +1,144 @@
+body.modal-open {
+    overflow: hidden;
+}
+
+.announcement-container {
+    display: grid;
+    gap: 18px;
+}
+
+.announcement {
+    padding: 22px;
+    border-radius: 26px;
+    background: linear-gradient(160deg, #fff9f1, #f2e7da 92%);
+    border: 1px solid rgba(48, 34, 18, 0.08);
+    box-shadow: 0 16px 34px rgba(11, 14, 28, 0.08);
+    cursor: pointer;
+}
+
+.announcement.important {
+    background:
+        linear-gradient(155deg, rgba(255, 196, 146, 0.96), rgba(255, 245, 235, 0.98) 38%, rgba(233, 228, 246, 0.95));
+}
+
+.announcement:focus-visible {
+    outline: 3px solid rgba(255, 122, 26, 0.38);
+    outline-offset: 4px;
+}
+
+.tag,
+.modal-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ffb36c, #ff6f10);
+    color: #1a100e;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.tag.normal {
+    background: rgba(37, 27, 48, 0.08);
+    color: #40364d;
+}
+
+.announcement h3,
+.modal-card h2 {
+    margin-top: 14px;
+    font-family: "Cormorant Garamond", serif;
+    font-size: 40px;
+    line-height: 0.92;
+    color: #1e1821;
+}
+
+.announcement p,
+.modal-message,
+.modal-extra li {
+    color: #5e5662;
+}
+
+.date,
+.modal-date {
+    display: block;
+    margin-top: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #8a4500;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(5, 7, 16, 0.68);
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    z-index: 1000;
+}
+
+.modal-backdrop.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-card {
+    position: relative;
+    width: min(100%, 700px);
+    max-height: 88vh;
+    overflow: hidden;
+    border-radius: 30px;
+    background: linear-gradient(180deg, rgba(255, 250, 242, 0.98), rgba(241, 232, 220, 0.97));
+    box-shadow: 0 36px 84px rgba(3, 6, 15, 0.36);
+}
+
+.modal-body {
+    padding: 28px;
+    overflow-y: auto;
+}
+
+.modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    font-size: 22px;
+    background: rgba(17, 12, 16, 0.08);
+    color: #1d1721;
+    cursor: pointer;
+}
+
+.modal-extra {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(32, 25, 19, 0.08);
+}
+
+.modal-extra h4 {
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8b4707;
+}
+
+.modal-extra ul {
+    list-style: none;
+    display: grid;
+    gap: 10px;
+}
+
+.modal-extra a {
+    color: #9a4500;
+}

@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Updated Timetables | CSE (AI & ML)</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/timetables.css">
+</head>
+<body class="theme-page timetables-page">
+
+<iframe
+    class="site-chrome site-chrome--header"
+    src="../components/header.html"
+    scrolling="no">
+</iframe>
+
+<main class="page-shell">
+    <section class="page-hero">
+        <div class="page-hero__layout">
+            <div>
+                <h1>Timetables</h1>
+                <div class="page-hero__actions">
+                    <a href="index.html" class="ghost-button">Back Home</a>
+                    <a href="#uploadedTimetables" class="cta-button">View Timetables</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content-panel">
+        <section class="table-card" id="academicCalendarSection">
+            <h2>Academic Calendar</h2>
+            <p class="updated-note" id="academicCalendarMeta">Loading academic calendar files...</p>
+            <div id="academicCalendarList" class="upload-list"></div>
+        </section>
+        <section class="table-card" id="uploadedTimetables">
+            <h2>Uploaded Timetables</h2>
+            <p class="updated-note" id="uploadedTimetablesMeta">Loading timetable files...</p>
+            <div id="uploadedTimetablesList" class="upload-list"></div>
+        </section>
+        <section class="table-card" id="dbTimetablesStatus">
+            <h2>Database Timetables</h2>
+            <p class="updated-note" id="dbTimetablesMeta">Loading database timetables...</p>
+        </section>
+        <div id="dbTimetablesMount" class="db-table-list"></div>
+    </section>
+</main>
+
+<div class="report-modal" id="calendarPreviewModal" hidden>
+    <div class="report-modal__backdrop" data-close-calendar-modal></div>
+    <div
+        class="report-modal__dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="calendarPreviewTitle">
+        <div class="report-modal__header">
+            <div>
+                <p class="report-modal__eyebrow">Academic Calendar</p>
+                <h2 id="calendarPreviewTitle">Preview</h2>
+            </div>
+            <button class="report-modal__close" id="calendarPreviewClose" type="button" aria-label="Close academic calendar preview">
+                Close
+            </button>
+        </div>
+        <div class="report-modal__frame-wrap">
+            <iframe
+                id="calendarPreviewFrame"
+                title="Academic calendar preview"
+                loading="lazy"
+                referrerpolicy="strict-origin-when-cross-origin">
+            </iframe>
+        </div>
+    </div>
+</div>
+
+<iframe
+    class="site-chrome site-chrome--footer"
+    src="../components/footer.html"
+    scrolling="no">
+</iframe>
+
+<script>
+const API_BASE =
+    document.querySelector('meta[name="api-base"]')?.getAttribute("content")?.trim() ||
+    "http://localhost:8081";
+const ACADEMIC_CALENDAR_TYPES = ["Autonomous", "Non-Autonomous"];
+const ACADEMIC_CALENDAR_LEVELS = ["II Year", "III Year", "IV Year"];
+const calendarPreviewModal = document.getElementById("calendarPreviewModal");
+const calendarPreviewTitle = document.getElementById("calendarPreviewTitle");
+const calendarPreviewFrame = document.getElementById("calendarPreviewFrame");
+const calendarPreviewClose = document.getElementById("calendarPreviewClose");
+
+function normalizeList(data) {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.items)) return data.items;
+    if (Array.isArray(data?.data)) return data.data;
+    return [];
+}
+
+function formatBytes(value) {
+    if (value === undefined || value === null) return "-";
+    const units = ["B", "KB", "MB", "GB"];
+    let size = Number(value);
+    let unitIndex = 0;
+    while (size >= 1024 && unitIndex < units.length - 1) {
+        size /= 1024;
+        unitIndex += 1;
+    }
+    return `${size.toFixed(size >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+}
+
+function formatDate(value) {
+    if (!value) return "Unknown date";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString();
+}
+
+function createFileCard(item) {
+    const section = document.createElement("div");
+    section.className = "upload-card";
+
+    const title = document.createElement("h3");
+    title.textContent = item.filename || item.name || "Timetable File";
+
+    const meta = document.createElement("p");
+    meta.className = "updated-note";
+    meta.textContent = `Uploaded: ${formatDate(item.uploadedAt || item.uploadDate)} • Size: ${formatBytes(item.size || item.length)}`;
+
+    const link = document.createElement("a");
+    link.className = "download-btn";
+    link.textContent = "Download";
+    link.href = getFileDownloadUrl(item);
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+
+    section.append(title, meta, link);
+    return section;
+}
+
+function normalizeText(value) {
+    return String(value || "").trim();
+}
+
+function getFileName(item) {
+    return normalizeText(item?.filename || item?.name || item?.title || "Timetable File");
+}
+
+function getFileDownloadUrl(item) {
+    const id = item?.id || item?._id;
+    if (!id) return "#";
+    return API_BASE.replace(/\/$/, "") + "/api/timetable-files/" + id;
+}
+
+function parseFileDate(item) {
+    const raw = item?.updatedAt || item?.uploadedAt || item?.uploadDate || item?.createdAt;
+    const parsed = raw ? new Date(raw) : null;
+    return parsed && !Number.isNaN(parsed.getTime()) ? parsed.getTime() : Number.NEGATIVE_INFINITY;
+}
+
+function sortFilesLatestFirst(items) {
+    return [...items].sort((left, right) => {
+        const byDate = parseFileDate(right) - parseFileDate(left);
+        if (byDate !== 0) return byDate;
+        return getFileName(right).localeCompare(getFileName(left));
+    });
+}
+
+function extractGoogleDriveFileId(value) {
+    const text = normalizeText(value);
+    if (!text) return "";
+
+    const directIdMatch = text.match(/^[a-zA-Z0-9_-]{20,}$/);
+    if (directIdMatch) return directIdMatch[0];
+
+    const urlMatch = text.match(/\/d\/([a-zA-Z0-9_-]+)/) || text.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    return urlMatch ? urlMatch[1] : "";
+}
+
+function getAcademicCalendarLevel(item) {
+    const explicitLevel = normalizeText(item?.studyYear || item?.yearLevel || item?.year || item?.label).toLowerCase();
+    const fileName = getFileName(item).toLowerCase();
+    const text = `${explicitLevel} ${fileName}`;
+
+    if (/\biv\b|\b4\b|\b4th\b|fourth/.test(text)) return "IV Year";
+    if (/\biii\b|\b3\b|\b3rd\b|third/.test(text)) return "III Year";
+    if (/\bii\b|\b2\b|\b2nd\b|second/.test(text)) return "II Year";
+    return "";
+}
+
+function getAcademicCalendarType(item) {
+    const explicitType = normalizeText(item?.calendarType || item?.type || item?.category).toLowerCase();
+    return explicitType.includes("non") ? "Non-Autonomous" : "Autonomous";
+}
+
+function groupAcademicCalendarFiles(items) {
+    const grouped = {};
+    ACADEMIC_CALENDAR_TYPES.forEach(type => {
+        grouped[type] = {};
+        ACADEMIC_CALENDAR_LEVELS.forEach(level => {
+            grouped[type][level] = null;
+        });
+    });
+
+    sortFilesLatestFirst(items).forEach(item => {
+        const type = getAcademicCalendarType(item);
+        const level = getAcademicCalendarLevel(item);
+        if (!type || !level || grouped[type]?.[level]) return;
+        grouped[type][level] = item;
+    });
+
+    return grouped;
+}
+
+function getAcademicCalendarPreviewUrl(item) {
+    if (!item) return "";
+
+    const explicitPreviewUrl = normalizeText(
+        item.previewUrl ||
+        item.reportPreviewUrl ||
+        item.googleDrivePreviewUrl ||
+        item.drivePreviewUrl ||
+        item.publicPreviewUrl ||
+        item.preview_url
+    );
+    if (explicitPreviewUrl) return explicitPreviewUrl;
+
+    const driveSource = normalizeText(
+        item.driveFileId ||
+        item.googleDriveFileId ||
+        item.fileId ||
+        item.driveLink ||
+        item.publicUrl ||
+        item.url ||
+        item.fileUrl ||
+        item.file_url
+    );
+    const driveFileId = extractGoogleDriveFileId(driveSource);
+    if (driveFileId) {
+        return "https://drive.google.com/file/d/" + driveFileId + "/preview";
+    }
+
+    const fileUrl = normalizeText(item.fileUrl || item.file_url || item.url);
+    if (fileUrl) return fileUrl;
+
+    const contentType = normalizeText(item.contentType || item.type).toLowerCase();
+    const fileName = getFileName(item).toLowerCase();
+    const isPdf = contentType.includes("pdf") || fileName.endsWith(".pdf");
+    return isPdf ? getFileDownloadUrl(item) : "";
+}
+
+function createAcademicCalendarCard(type, level, item) {
+    const card = document.createElement("article");
+    card.className = "academic-calendar-card";
+
+    const previewUrl = getAcademicCalendarPreviewUrl(item);
+    if (previewUrl) {
+        card.classList.add("academic-calendar-card--interactive");
+        card.tabIndex = 0;
+        card.setAttribute("role", "button");
+        card.setAttribute("aria-haspopup", "dialog");
+        card.setAttribute("aria-label", `${type} ${level} academic calendar preview`);
+        card.addEventListener("click", () => openCalendarPreview(type, level, item));
+        card.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                openCalendarPreview(type, level, item);
+            }
+        });
+    } else {
+        card.classList.add("academic-calendar-card--disabled");
+    }
+
+    const year = document.createElement("p");
+    year.className = "academic-calendar-card__year";
+    year.textContent = type;
+
+    const title = document.createElement("h3");
+    title.textContent = level;
+
+    const fileName = document.createElement("p");
+    fileName.className = "academic-calendar-card__filename";
+    fileName.textContent = item
+        ? normalizeText(item.title) || getFileName(item) || `${type} ${level} Academic Calendar`
+        : "PDF not available yet";
+
+    const meta = document.createElement("p");
+    meta.className = "updated-note";
+    meta.textContent = item
+        ? (normalizeText(item.fileUrl || item.file_url || item.url)
+            ? "Preview and download available."
+            : "Preview available.")
+        : "Add or connect this year's PDF to enable preview.";
+
+    const actions = document.createElement("div");
+    actions.className = "academic-calendar-card__actions";
+
+    if (previewUrl) {
+        const previewBtn = document.createElement("button");
+        previewBtn.className = "download-btn preview-btn";
+        previewBtn.type = "button";
+        previewBtn.textContent = "Preview";
+        previewBtn.addEventListener("click", (event) => {
+            event.stopPropagation();
+            openCalendarPreview(type, level, item);
+        });
+        actions.appendChild(previewBtn);
+    }
+
+    if (item) {
+        const downloadLink = document.createElement("a");
+        downloadLink.className = "download-btn download-btn--ghost";
+        downloadLink.textContent = "Download";
+        downloadLink.href = normalizeText(item.fileUrl || item.file_url || item.url) || getAcademicCalendarPreviewUrl(item);
+        downloadLink.target = "_blank";
+        downloadLink.rel = "noopener noreferrer";
+        downloadLink.addEventListener("click", (event) => event.stopPropagation());
+        actions.appendChild(downloadLink);
+    }
+
+    card.append(year, title, fileName, meta, actions);
+    return card;
+}
+
+function createAcademicCalendarGroup(type, entriesByLevel) {
+    const section = document.createElement("section");
+    section.className = "academic-calendar-group";
+
+    const heading = document.createElement("h3");
+    heading.className = "academic-calendar-group__title";
+    heading.textContent = type;
+
+    const grid = document.createElement("div");
+    grid.className = "academic-calendar-group__grid";
+
+    ACADEMIC_CALENDAR_LEVELS.forEach(level => {
+        grid.appendChild(createAcademicCalendarCard(type, level, entriesByLevel?.[level] || null));
+    });
+
+    section.append(heading, grid);
+    return section;
+}
+
+function openCalendarPreview(type, level, item) {
+    const previewUrl = getAcademicCalendarPreviewUrl(item);
+    if (!previewUrl || !calendarPreviewModal || !calendarPreviewFrame) return;
+
+    if (calendarPreviewTitle) {
+        calendarPreviewTitle.textContent = `${type} ${level} Academic Calendar`;
+    }
+
+    calendarPreviewFrame.src = previewUrl;
+    calendarPreviewModal.hidden = false;
+    document.body.classList.add("calendar-modal-open");
+}
+
+function closeCalendarPreview() {
+    if (!calendarPreviewModal || !calendarPreviewFrame) return;
+    calendarPreviewModal.hidden = true;
+    calendarPreviewFrame.src = "about:blank";
+    document.body.classList.remove("calendar-modal-open");
+}
+
+function getDbField(item, keys) {
+    for (const key of keys) {
+        if (item && item[key] !== undefined && item[key] !== null && item[key] !== "") {
+            return item[key];
+        }
+    }
+    return "—";
+}
+
+function isScheduleItem(item) {
+    if (!item) return false;
+    if (item.DAY || item.day || item.ROOM || item.room) return true;
+    return Object.keys(item).some(key => /\d{1,2}:\d{2}/.test(key));
+}
+
+function groupByClass(items) {
+    const map = {};
+    items.forEach(item => {
+        const key = item.CLASS || item.class || item.semester || item.Semester || "";
+        if (!key) return;
+        const keyUpper = String(key).trim().toUpperCase();
+        if (keyUpper === "CLASS") return;
+        if (!map[key]) {
+            map[key] = [];
+        }
+        map[key].push(item);
+    });
+    return map;
+}
+
+function getClassValue(item) {
+    return String(item?.CLASS || item?.class || item?.semester || item?.Semester || "").trim();
+}
+
+function getDayValue(item) {
+    return String(item?.DAY || item?.day || "").trim();
+}
+
+function getSlotKeys(items) {
+    const ignore = new Set([
+        "_id", "id", "CLASS", "class", "ROOM", "room", "DAY", "day", "semester", "Semester"
+    ]);
+    const slots = new Set();
+    items.forEach(item => {
+        Object.keys(item || {}).forEach(key => {
+            if (!ignore.has(key)) slots.add(key);
+        });
+    });
+    return Array.from(slots);
+}
+
+function toMinutes(value) {
+    if (!value) return Number.POSITIVE_INFINITY;
+    const match = value.match(/(\d{1,2}):(\d{2})/);
+    if (!match) return Number.POSITIVE_INFINITY;
+    let hours = Number(match[1]);
+    const minutes = Number(match[2]);
+    return hours * 60 + minutes;
+}
+
+function sortSlotKeys(keys) {
+    const hasMorning = keys.some(key => {
+        const start = key.split("-")[0].trim();
+        const match = start.match(/(\d{1,2}):(\d{2})/);
+        if (!match) return false;
+        const hours = Number(match[1]);
+        return hours >= 9 && hours <= 12;
+    });
+
+    return keys.slice().sort((a, b) => {
+        const startA = a.split("-")[0].trim();
+        const startB = b.split("-")[0].trim();
+        const minutesA = toMinutes(startA);
+        const minutesB = toMinutes(startB);
+
+        const adjust = (mins, start) => {
+            const match = start.match(/(\d{1,2}):(\d{2})/);
+            if (!match) return mins;
+            const hours = Number(match[1]);
+            if (hasMorning && hours >= 1 && hours <= 5) {
+                return (hours + 12) * 60 + Number(match[2]);
+            }
+            return mins;
+        };
+
+        return adjust(minutesA, startA) - adjust(minutesB, startB);
+    });
+}
+
+function normalizeClassKey(value) {
+    const raw = String(value || "").toUpperCase();
+    if (!raw) return raw;
+    if (raw === "CLASS") return raw;
+    if (raw.includes("IV") || raw.includes("4")) return "IV-II";
+    if (raw.includes("III") || raw.includes("3")) return "III-II";
+    if (raw.includes("II") || raw.includes("2")) return "II-II";
+    return raw;
+}
+
+function isPlaceholderRow(item) {
+    const day = String(item.DAY || item.day || "").trim().toUpperCase();
+    const room = String(item.ROOM || item.room || "").trim().toUpperCase();
+    if (day === "DAY" || room === "ROOM") return true;
+    return false;
+}
+
+function isHeaderTemplateRow(item) {
+    return getClassValue(item).toUpperCase() === "CLASS" && getDayValue(item).toUpperCase() === "DAY";
+}
+
+function isEmptySeparatorRow(item) {
+    return !getClassValue(item) && !getDayValue(item) && !(item?.ROOM || item?.room);
+}
+
+function getSlotDescriptors(items, labelsByKey) {
+    return sortSlotKeys(getSlotKeys(items)).map(key => ({
+        key,
+        label: labelsByKey?.[key] || key
+    }));
+}
+
+function extractHeaderLabels(item) {
+    const labels = {};
+    sortSlotKeys(getSlotKeys([item])).forEach(key => {
+        const text = String(item?.[key] ?? "").trim();
+        labels[key] = text || key;
+    });
+    return labels;
+}
+
+function prepareSchedules(items) {
+    const grouped = {};
+    const headerLabelsByClass = {};
+    let pendingHeaderLabels = null;
+
+    items.forEach(item => {
+        if (!item || isEmptySeparatorRow(item)) return;
+
+        if (isHeaderTemplateRow(item)) {
+            pendingHeaderLabels = extractHeaderLabels(item);
+            return;
+        }
+
+        const className = getClassValue(item);
+        if (!className || className.toUpperCase() === "CLASS") return;
+
+        if (!grouped[className]) {
+            grouped[className] = [];
+        }
+        grouped[className].push(item);
+
+        if (pendingHeaderLabels && !headerLabelsByClass[className]) {
+            headerLabelsByClass[className] = pendingHeaderLabels;
+            pendingHeaderLabels = null;
+        }
+    });
+
+    return { grouped, headerLabelsByClass };
+}
+
+function sortByDay(items) {
+    const order = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+    return items.slice().sort((a, b) => {
+        const dayA = String(a.DAY || a.day || "").toUpperCase();
+        const dayB = String(b.DAY || b.day || "").toUpperCase();
+        return order.indexOf(dayA) - order.indexOf(dayB);
+    });
+}
+
+function createScheduleCard(className, items, labelsByKey) {
+    const section = document.createElement("section");
+    section.className = "table-card";
+
+    const title = document.createElement("h2");
+    title.textContent = className;
+
+    const table = document.createElement("table");
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
+
+    const slotDescriptors = getSlotDescriptors(items, labelsByKey);
+    const hasRoom = items.some(item => item.ROOM || item.room);
+    const columns = ["Day", ...(hasRoom ? ["Room"] : []), ...slotDescriptors.map(slot => slot.label)];
+
+    columns.forEach(text => {
+        const th = document.createElement("th");
+        th.textContent = text;
+        headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+
+    const tbody = document.createElement("tbody");
+    sortByDay(items).forEach(item => {
+        if (isPlaceholderRow(item)) return;
+        const row = document.createElement("tr");
+        const day = document.createElement("td");
+        day.textContent = item.DAY || item.day || "N/A";
+        if (day.textContent === "N/A") return;
+        row.append(day);
+
+        if (hasRoom) {
+            const room = document.createElement("td");
+            room.textContent = item.ROOM ?? item.room ?? "—";
+            row.appendChild(room);
+        }
+
+        slotDescriptors.forEach(slot => {
+            const td = document.createElement("td");
+            td.textContent = item[slot.key] || "—";
+            row.appendChild(td);
+        });
+        tbody.appendChild(row);
+    });
+
+    table.append(thead, tbody);
+    section.append(title, table);
+    return section;
+}
+
+async function loadUploadedFiles() {
+    const list = document.getElementById("uploadedTimetablesList");
+    const meta = document.getElementById("uploadedTimetablesMeta");
+    if (!list || !meta) return;
+
+    try {
+        meta.textContent = "Loading timetable files...";
+        list.innerHTML = "";
+
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/timetable-files");
+        if (!res.ok) throw new Error("Bad response");
+        const data = sortFilesLatestFirst(normalizeList(await res.json()));
+
+        const timetableFiles = data;
+
+        if (timetableFiles.length === 0) {
+            meta.textContent = "No uploaded timetables available.";
+            return;
+        }
+
+        meta.textContent = `Showing ${timetableFiles.length} timetable file${timetableFiles.length === 1 ? "" : "s"}.`;
+        timetableFiles.forEach(item => list.appendChild(createFileCard(item)));
+    } catch (err) {
+        console.error("Failed to load timetables:", err);
+        meta.textContent = "Unable to load uploaded files. Check the API connection.";
+    }
+}
+
+async function loadAcademicCalendars() {
+    const calendarList = document.getElementById("academicCalendarList");
+    const calendarMeta = document.getElementById("academicCalendarMeta");
+    if (!calendarList || !calendarMeta) return;
+
+    try {
+        calendarMeta.textContent = "Loading academic calendar links...";
+        calendarList.innerHTML = "";
+
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/academic-calendars");
+        if (!res.ok) throw new Error("Bad response");
+        const data = normalizeList(await res.json());
+        const academicCalendars = groupAcademicCalendarFiles(data);
+
+        const availableAcademicCalendarCount = ACADEMIC_CALENDAR_TYPES.reduce((count, type) => {
+            return count + ACADEMIC_CALENDAR_LEVELS.filter(level => academicCalendars[type]?.[level]).length;
+        }, 0);
+        calendarMeta.textContent = availableAcademicCalendarCount
+            ? "Choose Autonomous or Non-Autonomous, then click the year to preview the saved PDF."
+            : "No saved academic calendar links found yet.";
+
+        ACADEMIC_CALENDAR_TYPES.forEach(type => {
+            calendarList.appendChild(createAcademicCalendarGroup(type, academicCalendars[type]));
+        });
+    } catch (err) {
+        console.error("Failed to load academic calendars:", err);
+        calendarMeta.textContent = "Unable to load academic calendar links. Check the API connection.";
+    }
+}
+
+async function loadDbTimetables() {
+    const meta = document.getElementById("dbTimetablesMeta");
+    const mount = document.getElementById("dbTimetablesMount");
+    if (!meta || !mount) return;
+
+    try {
+        meta.textContent = "Loading database timetables...";
+        mount.innerHTML = "";
+
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/timetables");
+        if (!res.ok) throw new Error("Bad response");
+        const data = normalizeList(await res.json());
+
+        if (data.length === 0) {
+            meta.textContent = "No database timetables available.";
+            return;
+        }
+
+        const isSchedule = data.some(isScheduleItem);
+        if (isSchedule) {
+            const { grouped, headerLabelsByClass } = prepareSchedules(data);
+            const desiredOrder = ["II-II", "III-II", "IV-II"];
+            const keys = Object.keys(grouped);
+            const ordered = [];
+            desiredOrder.forEach(label => {
+                const match = keys.find(k => normalizeClassKey(k) === label);
+                if (match) ordered.push(match);
+            });
+            keys.forEach(k => {
+                if (!ordered.includes(k)) ordered.push(k);
+            });
+
+            ordered.forEach(classKey => {
+                const items = grouped[classKey] || [];
+                if (items.length === 0) return;
+                mount.appendChild(createScheduleCard(classKey, items, headerLabelsByClass[classKey]));
+            });
+
+            meta.textContent = `Showing ${Object.keys(grouped).length} class timetable${Object.keys(grouped).length === 1 ? "" : "s"}.`;
+            return;
+        }
+
+        const section = document.createElement("section");
+        section.className = "table-card";
+        const title = document.createElement("h2");
+        title.textContent = "Timetable Records";
+        const table = document.createElement("table");
+        const thead = document.createElement("thead");
+        thead.innerHTML = "<tr><th>Semester</th><th>Subject</th><th>Faculty</th><th>Time</th></tr>";
+        const tbody = document.createElement("tbody");
+        data.forEach(item => {
+            const row = document.createElement("tr");
+            const semester = document.createElement("td");
+            const subject = document.createElement("td");
+            const faculty = document.createElement("td");
+            const time = document.createElement("td");
+
+            semester.textContent = getDbField(item, ["semester", "CLASS", "class", "Semester"]);
+            subject.textContent = getDbField(item, ["subject", "SUBJECT", "subjectName"]);
+            faculty.textContent = getDbField(item, ["faculty", "FACULTY", "facultyName"]);
+            time.textContent = getDbField(item, ["time", "TIME", "slot", "period"]);
+
+            row.append(semester, subject, faculty, time);
+            tbody.appendChild(row);
+        });
+        table.append(thead, tbody);
+        section.append(title, table);
+        mount.appendChild(section);
+
+        meta.textContent = `Showing ${data.length} record${data.length === 1 ? "" : "s"}.`;
+    } catch (err) {
+        console.error("Failed to load database timetables:", err);
+        meta.textContent = "Unable to load database timetables. Check the API connection.";
+    }
+}
+
+calendarPreviewModal?.addEventListener("click", (event) => {
+    const closeTrigger = event.target.closest("[data-close-calendar-modal]");
+    if (closeTrigger) closeCalendarPreview();
+});
+
+calendarPreviewClose?.addEventListener("click", closeCalendarPreview);
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && calendarPreviewModal && !calendarPreviewModal.hidden) {
+        closeCalendarPreview();
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadAcademicCalendars();
+    loadUploadedFiles();
+    loadDbTimetables();
+});
+</script>
+
+</body>
+</html>

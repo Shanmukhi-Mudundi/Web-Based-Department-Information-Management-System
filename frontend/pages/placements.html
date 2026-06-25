@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CSE (AI & ML) Placements</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="api-base" content="http://localhost:8081">
+
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/placements.css">
+</head>
+<body class="theme-page placements-page">
+
+<iframe
+    class="site-chrome site-chrome--header"
+    src="../components/header.html"
+    scrolling="no">
+</iframe>
+
+<main class="page-shell">
+    <section class="page-hero">
+        <div class="page-hero__layout">
+            <div class="placements-hero__copy">
+                <h1>Placements</h1>
+                <p class="placements-hero__summary">
+                    Explore recent placement and internship highlights from the department, with student success stories and recruiter snapshots.
+                </p>
+                <div class="page-hero__actions">
+                    <a href="index.html" class="ghost-button">Back Home</a>
+                    <a href="#placementsGrid" class="cta-button">View Placements</a>
+                </div>
+            </div>
+            <section class="hero-slider" aria-label="Placement highlights slider">
+                <div class="hero-slider__viewport">
+                    <div class="hero-slider__track" id="placementHeroSlider">
+                        <article class="hero-slide is-active">
+                            <img src="../assets/images/Screenshot%202026-04-03%20111941.png" alt="Placement highlight from TCS student selection">
+                        </article>
+                        <article class="hero-slide">
+                            <img src="../assets/images/Screenshot%202026-04-03%20112313.png" alt="Placement highlight showing package announcement">
+                        </article>
+                        <article class="hero-slide">
+                            <img src="../assets/images/Screenshot%202026-04-03%20111859.png" alt="Placement highlight from Optum recruitment">
+                        </article>
+                        <article class="hero-slide">
+                            <img src="../assets/images/divya-saahithya(intern-ship).jpeg" alt="Internship recognition card for Divya Saahithya">
+                        </article>
+                        <article class="hero-slide">
+                            <img src="../assets/images/internship-2022.jpeg" alt="Internship achievement collage">
+                        </article>
+                    </div>
+                </div>
+                <div class="hero-slider__controls">
+                    <button type="button" class="hero-slider__button" id="placementSliderPrev" aria-label="Previous slide">Prev</button>
+                    <div class="hero-slider__dots" id="placementSliderDots" aria-label="Choose placement slide"></div>
+                    <button type="button" class="hero-slider__button hero-slider__button--accent" id="placementSliderNext" aria-label="Next slide">Next</button>
+                </div>
+            </section>
+        </div>
+    </section>
+
+    <section class="content-panel">
+    <section class="section-block placement-dashboard">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">Placement Pulse Board</h2>
+                <p class="section-subtitle">A quick read on department outcomes, top compensation, and recruiter momentum.</p>
+            </div>
+        </div>
+        <div class="pulse-grid" id="placementPulseBoard">
+            <p class="dashboard-empty">Loading placement insights...</p>
+        </div>
+    </section>
+
+    <section class="section-block recruiter-wall-section">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">Recruiter Impact Wall</h2>
+                <p class="section-subtitle">Companies are ranked by how many offers they contributed to the department.</p>
+            </div>
+        </div>
+        <div class="recruiter-wall" id="recruiterImpactWall">
+            <p class="dashboard-empty">Loading recruiter impact...</p>
+        </div>
+    </section>
+
+    <section class="section-block internships-section">
+        <div class="section-split">
+            <div class="section-content">
+                <div class="section-head">
+                    <h2 class="section-title">Internships</h2>
+                </div>
+                <div class="filter-row">
+                    <label for="internshipBatchFilter">Select Batch:</label>
+                    <select id="internshipBatchFilter">
+                        <option value="all">All</option>
+                    </select>
+                </div>
+
+                <section class="placements-grid internships-grid" id="internshipsGrid"></section>
+            </div>
+
+        </div>
+    </section>
+
+    <section class="section-block placements-section">
+        <div class="section-head">
+            <h2 class="section-title">Placements</h2>
+        </div>
+        <div class="filter-row">
+            <label for="batchFilter">Select Batch:</label>
+            <select id="batchFilter">
+                <option value="all">All</option>
+            </select>
+        </div>
+
+        <section class="placements-grid" id="placementsGrid">
+
+            <div class="placement-card placement-card--placement">
+                <div class="placement-card__top">
+                    <span class="category student">Student Placement</span>
+                    <span class="placement-card__year">2025</span>
+                </div>
+                <p class="placement-company">TCS</p>
+                <h3>Vedha R</h3>
+                <p class="placement-role">Software Engineer</p>
+                <div class="placement-metric">
+                    <span class="placement-metric__label">Package</span>
+                    <strong class="placement-metric__value">6.5 LPA</strong>
+                </div>
+                <p class="placement-summary">
+                    Successfully placed at <strong>TCS</strong> as a Software Engineer.
+                </p>
+            </div>
+
+            <div class="placement-card placement-card--placement">
+                <div class="placement-card__top">
+                    <span class="category student">Student Placement</span>
+                    <span class="placement-card__year">2024</span>
+                </div>
+                <p class="placement-company">Infosys</p>
+                <h3>Ananya S</h3>
+                <p class="placement-role">Systems Engineer</p>
+                <div class="placement-metric">
+                    <span class="placement-metric__label">Package</span>
+                    <strong class="placement-metric__value">5.8 LPA</strong>
+                </div>
+                <p class="placement-summary">
+                    Selected by <strong>Infosys</strong> as a Systems Engineer.
+                </p>
+            </div>
+
+            <div class="placement-card placement-card--placement">
+                <div class="placement-card__top">
+                    <span class="category student">Student Placement</span>
+                    <span class="placement-card__year">2024</span>
+                </div>
+                <p class="placement-company">Wipro</p>
+                <h3>Rahul K</h3>
+                <p class="placement-role">Project Engineer</p>
+                <div class="placement-metric">
+                    <span class="placement-metric__label">Package</span>
+                    <strong class="placement-metric__value">5.5 LPA</strong>
+                </div>
+                <p class="placement-summary">
+                    Secured placement in <strong>Wipro</strong> as a Project Engineer.
+                </p>
+            </div>
+
+            <div class="placement-card placement-card--highlight">
+                <div class="placement-card__top">
+                    <span class="category department">Department Achievement</span>
+                    <span class="placement-card__year">2025</span>
+                </div>
+                <p class="placement-company">Department Milestone</p>
+                <h3>Highest Package Record</h3>
+                <div class="placement-metric">
+                    <span class="placement-metric__label">Top Offer</span>
+                    <strong class="placement-metric__value">12 LPA</strong>
+                </div>
+                <p class="placement-summary">
+                    The department achieved its highest package of <strong>12 LPA</strong> in the academic year.
+                </p>
+            </div>
+
+            <div class="placement-card placement-card--highlight">
+                <div class="placement-card__top">
+                    <span class="category department">Department Achievement</span>
+                    <span class="placement-card__year">2025</span>
+                </div>
+                <p class="placement-company">Graduate Success</p>
+                <h3>Placement Percentage</h3>
+                <div class="placement-metric">
+                    <span class="placement-metric__label">Placement Rate</span>
+                    <strong class="placement-metric__value">92%</strong>
+                </div>
+                <p class="placement-summary">
+                    Achieved a <strong>92% placement rate</strong> for the graduating batch.
+                </p>
+            </div>
+
+        </section>
+    </section>
+    </section>
+</main>
+
+<iframe
+    class="site-chrome site-chrome--footer"
+    src="../components/footer.html"
+    scrolling="no">
+</iframe>
+
+<script>
+const API_BASE =
+    document.querySelector('meta[name="api-base"]')?.getAttribute("content")?.trim() ||
+    "http://localhost:8081";
+
+function normalizeList(data) {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.items)) return data.items;
+    if (Array.isArray(data?.data)) return data.data;
+    return [];
+}
+
+function initPlacementHeroSlider() {
+    const slides = Array.from(document.querySelectorAll(".hero-slide"));
+    const dotsWrap = document.getElementById("placementSliderDots");
+    const nextBtn = document.getElementById("placementSliderNext");
+    const prevBtn = document.getElementById("placementSliderPrev");
+    const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    if (!slides.length || !dotsWrap || !nextBtn || !prevBtn) return;
+
+    let currentIndex = 0;
+    let autoplayId = null;
+
+    function renderDots() {
+        dotsWrap.innerHTML = "";
+        slides.forEach((_, index) => {
+            const dot = document.createElement("button");
+            dot.type = "button";
+            dot.className = "hero-slider__dot";
+            dot.setAttribute("aria-label", "Go to slide " + (index + 1));
+            dot.addEventListener("click", () => {
+                showSlide(index);
+                restartAutoplay();
+            });
+            dotsWrap.appendChild(dot);
+        });
+    }
+
+    function showSlide(index) {
+        currentIndex = (index + slides.length) % slides.length;
+        slides.forEach((slide, slideIndex) => {
+            slide.classList.toggle("is-active", slideIndex === currentIndex);
+        });
+
+        Array.from(dotsWrap.children).forEach((dot, dotIndex) => {
+            dot.classList.toggle("is-active", dotIndex === currentIndex);
+            dot.setAttribute("aria-pressed", dotIndex === currentIndex ? "true" : "false");
+        });
+    }
+
+    function startAutoplay() {
+        if (reducedMotionQuery.matches) return;
+        autoplayId = window.setInterval(() => {
+            showSlide(currentIndex + 1);
+        }, 4200);
+    }
+
+    function restartAutoplay() {
+        if (autoplayId) {
+            window.clearInterval(autoplayId);
+            autoplayId = null;
+        }
+        startAutoplay();
+    }
+
+    nextBtn.addEventListener("click", () => {
+        showSlide(currentIndex + 1);
+        restartAutoplay();
+    });
+
+    prevBtn.addEventListener("click", () => {
+        showSlide(currentIndex - 1);
+        restartAutoplay();
+    });
+
+    const slider = document.querySelector(".hero-slider");
+    if (slider) {
+        slider.addEventListener("mouseenter", () => {
+            if (autoplayId) {
+                window.clearInterval(autoplayId);
+                autoplayId = null;
+            }
+        });
+        slider.addEventListener("mouseleave", restartAutoplay);
+        slider.addEventListener("focusin", () => {
+            if (autoplayId) {
+                window.clearInterval(autoplayId);
+                autoplayId = null;
+            }
+        });
+        slider.addEventListener("focusout", restartAutoplay);
+    }
+
+    const handleReducedMotionChange = () => {
+        if (reducedMotionQuery.matches) {
+            if (autoplayId) {
+                window.clearInterval(autoplayId);
+                autoplayId = null;
+            }
+        } else {
+            restartAutoplay();
+        }
+    };
+
+    if (typeof reducedMotionQuery.addEventListener === "function") {
+        reducedMotionQuery.addEventListener("change", handleReducedMotionChange);
+    } else if (typeof reducedMotionQuery.addListener === "function") {
+        reducedMotionQuery.addListener(handleReducedMotionChange);
+    }
+
+    renderDots();
+    showSlide(0);
+    startAutoplay();
+}
+
+function getPackageValue(item) {
+    if (!item) return null;
+    let value = item.packageAmount ??
+        item.package ??
+        item.pavkage ??
+        item.ctc ??
+        item.lpa ??
+        item.salary ??
+        item.packageLpa ??
+        item.pavkageAmount ??
+        item.pavkageLpa ??
+        item.fte ??
+        item.ftePackage ??
+        item.fteLpa ??
+        null;
+
+    if (value === null || value === undefined || value === "") {
+        const studentName = (item.studentName || item.name || item.student || "").toString().trim().toLowerCase();
+        if (studentName === "immidi sivani") {
+            value = "8 LPA";
+        }
+    }
+
+    if (value === null || value === undefined || value === "") {
+        const company = (item.company || item.organization || item.employer || "").toString().trim();
+        const type = (item.type || item.offerType || item.jobType || item.employmentType || "").toString().toLowerCase();
+        if (company.toLowerCase() === "bz" && (type.includes("fte") || type === "")) {
+            value = "8 LPA";
+        }
+    }
+
+    if (value === null || value === undefined || value === "") {
+        const text = (item.description || item.notes || item.details || "").toString();
+        const match = text.match(/(\d+(\.\d+)?)\s*LPA/i);
+        if (match) {
+            value = match[0];
+        }
+    }
+
+    return value;
+}
+
+function formatLpa(value) {
+    if (!Number.isFinite(value)) return "—";
+    return `${value % 1 === 0 ? value.toFixed(0) : value.toFixed(1)} LPA`;
+}
+
+function parsePackageNumber(value) {
+    if (value === undefined || value === null) return NaN;
+    if (typeof value === "number") return value;
+    const text = String(value);
+    const match = text.match(/[\d.]+/g);
+    if (!match || match.length === 0) return NaN;
+    const num = parseFloat(match[0]);
+    return Number.isFinite(num) ? num : NaN;
+}
+
+function compareByPackageDesc(a, b) {
+    const aVal = parsePackageNumber(getPackageValue(a));
+    const bVal = parsePackageNumber(getPackageValue(b));
+    if (!Number.isFinite(aVal) && !Number.isFinite(bVal)) return 0;
+    if (!Number.isFinite(aVal)) return 1;
+    if (!Number.isFinite(bVal)) return -1;
+    return bVal - aVal;
+}
+
+function getRoleValue(item) {
+    if (!item) return "";
+    return (
+        item.role ||
+        item.jobRole ||
+        item.position ||
+        item.designation ||
+        item.jobTitle ||
+        item.profile ||
+        item.offerType ||
+        item.jobType ||
+        item.employmentType ||
+        ""
+    ).toString().trim();
+}
+
+function getCompanyValue(item) {
+    if (!item) return "";
+    return (
+        item.company ||
+        item.organization ||
+        item.employer ||
+        item.internshipCompany ||
+        ""
+    ).toString().trim();
+}
+
+function appendMetaPills(container, item) {
+    const meta = document.createElement("div");
+    meta.className = "placement-meta";
+
+    const addMeta = (label, value) => {
+        if (value === undefined || value === null || String(value).trim() === "") return;
+        const pill = document.createElement("span");
+        pill.className = "placement-meta__item";
+        pill.textContent = label + ": " + String(value).trim();
+        meta.appendChild(pill);
+    };
+
+    addMeta("Roll No", item.rollNumber || item.rollNo);
+    addMeta("Dept", item.department);
+    addMeta("Batch", item.batch);
+    addMeta("Type", item.type && item.type !== "Student Placement" ? item.type : "");
+
+    if (meta.childElementCount > 0) {
+        container.appendChild(meta);
+    }
+}
+
+function createPlacementCard(item) {
+    const card = document.createElement("div");
+    card.className = "placement-card placement-card--placement";
+
+    const top = document.createElement("div");
+    top.className = "placement-card__top";
+
+    const category = document.createElement("span");
+    category.className = "category student";
+    category.textContent = item.type || "Student Placement";
+    top.appendChild(category);
+
+    const yearText = item.batch || item.year;
+    if (yearText) {
+        const year = document.createElement("span");
+        year.className = "placement-card__year";
+        year.textContent = yearText;
+        top.appendChild(year);
+    }
+
+    const name = document.createElement("h3");
+    name.textContent = item.studentName || item.name || item.student || "Placement";
+
+    const company = getCompanyValue(item);
+    const companyLine = document.createElement("p");
+    companyLine.className = "placement-company";
+    companyLine.textContent = company || "Placement Spotlight";
+
+    const role = getRoleValue(item);
+    let roleLine = null;
+    if (role) {
+        roleLine = document.createElement("p");
+        roleLine.className = "placement-role";
+        roleLine.textContent = role;
+    }
+
+    const packageValue = getPackageValue(item);
+    let metric = null;
+    if (packageValue !== undefined && packageValue !== null && packageValue !== "") {
+        metric = document.createElement("div");
+        metric.className = "placement-metric";
+
+        const metricLabel = document.createElement("span");
+        metricLabel.className = "placement-metric__label";
+        metricLabel.textContent = "Package";
+
+        const metricValue = document.createElement("strong");
+        metricValue.className = "placement-metric__value";
+        metricValue.textContent = packageValue;
+
+        metric.append(metricLabel, metricValue);
+    }
+
+    const details = document.createElement("p");
+    details.className = "placement-summary";
+    if (company) {
+        details.textContent = role
+            ? "Placed at " + company + " as " + role + "."
+            : "Placed at " + company + ".";
+        if (packageValue !== undefined && packageValue !== null && packageValue !== "") {
+            details.textContent += " Package: " + packageValue + ".";
+        }
+    } else {
+        details.textContent = item.description || item.notes || "Placement details will be updated soon.";
+    }
+
+    card.append(top, companyLine, name);
+    if (roleLine) card.appendChild(roleLine);
+    if (metric) card.appendChild(metric);
+    card.appendChild(details);
+    appendMetaPills(card, item);
+
+    if (!details.textContent && !(details.childNodes && details.childNodes.length)) {
+        const list = document.createElement("ul");
+        Object.entries(item || {})
+            .filter(([key]) => key !== "_id" && key !== "id")
+            .forEach(([key, value]) => {
+                const li = document.createElement("li");
+                li.textContent = key + ": " + String(value);
+                list.appendChild(li);
+            });
+        if (list.childElementCount > 0) card.appendChild(list);
+    }
+
+    return card;
+}
+
+function createInternshipCard(item) {
+    const card = document.createElement("div");
+    card.className = "placement-card placement-card--internship";
+
+    const top = document.createElement("div");
+    top.className = "placement-card__top";
+
+    const category = document.createElement("span");
+    category.className = "category student";
+    category.textContent = item.type || "Internship";
+    top.appendChild(category);
+
+    const yearText = item.batch || item.year;
+    if (yearText) {
+        const year = document.createElement("span");
+        year.className = "placement-card__year";
+        year.textContent = yearText;
+        top.appendChild(year);
+    }
+
+    const name = document.createElement("h3");
+    name.textContent = item.studentName || item.name || item.student || "Internship";
+
+    const company = getCompanyValue(item);
+    const companyLine = document.createElement("p");
+    companyLine.className = "placement-company";
+    companyLine.textContent = company || "Internship Opportunity";
+
+    const role = getRoleValue(item);
+    let roleLine = null;
+    if (role) {
+        roleLine = document.createElement("p");
+        roleLine.className = "placement-role";
+        roleLine.textContent = role;
+    }
+
+    const stipendValue =
+        item.stipend ||
+        item.stipendAmount ||
+        item.stipendValue ||
+        item.packageAmount ||
+        item.package;
+    let metric = null;
+    if (stipendValue !== undefined && stipendValue !== null && String(stipendValue).trim() !== "") {
+        metric = document.createElement("div");
+        metric.className = "placement-metric";
+
+        const metricLabel = document.createElement("span");
+        metricLabel.className = "placement-metric__label";
+        metricLabel.textContent = "Stipend";
+
+        const metricValue = document.createElement("strong");
+        metricValue.className = "placement-metric__value";
+        metricValue.textContent = String(stipendValue).trim();
+
+        metric.append(metricLabel, metricValue);
+    }
+
+    const details = document.createElement("p");
+    details.className = "placement-summary";
+    if (company) {
+        details.textContent = role
+            ? "Internship at " + company + " as " + role + "."
+            : "Internship at " + company + ".";
+    } else {
+        details.textContent = item.description || item.notes || "Internship details will be updated soon.";
+    }
+
+    card.append(top, companyLine, name);
+    if (roleLine) card.appendChild(roleLine);
+    if (metric) card.appendChild(metric);
+    card.appendChild(details);
+    appendMetaPills(card, item);
+
+    if (!details.textContent && !(details.childNodes && details.childNodes.length)) {
+        const list = document.createElement("ul");
+        Object.entries(item || {})
+            .filter(([key]) => key !== "_id" && key !== "id")
+            .forEach(([key, value]) => {
+                const li = document.createElement("li");
+                li.textContent = key + ": " + String(value);
+                list.appendChild(li);
+            });
+        if (list.childElementCount > 0) card.appendChild(list);
+    }
+
+    return card;
+}
+
+function groupByBatch(items) {
+    const groups = {};
+    items.forEach(item => {
+        const key = getBatchValue(item);
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(item);
+    });
+    return groups;
+}
+
+function appendBatchSection(container, batch, items) {
+    const heading = document.createElement("h3");
+    heading.textContent = batch;
+    container.appendChild(heading);
+    items.forEach(item => container.appendChild(createPlacementCard(item)));
+}
+
+let allPlacements = [];
+let allInternships = [];
+
+const BATCH_ORDER = ["22-26", "21-25", "20-24"];
+
+const BATCH_ALIASES = new Map([
+    ["2022-26", "22-26"],
+    ["2022-2026", "22-26"],
+    ["22-26", "22-26"],
+    ["2021-25", "21-25"],
+    ["2021-2025", "21-25"],
+    ["21-25", "21-25"],
+    ["2020-24", "20-24"],
+    ["2020-2024", "20-24"],
+    ["20-24", "20-24"]
+]);
+
+function getBatchValue(item) {
+    const raw = item?.batch ?? item?.year ?? "";
+    const rawText = String(raw).trim();
+
+    const aliased = BATCH_ALIASES.get(rawText);
+    if (aliased) return aliased;
+
+    const yearMatch = rawText.match(/\b(20\d{2})\b/);
+    if (yearMatch) {
+        const year = parseInt(yearMatch[1], 10);
+        if (year === 2026 || year === 2025 || year === 2024) {
+            if (year === 2026) return "22-26";
+            if (year === 2025) return "21-25";
+            if (year === 2024) return "20-24";
+        }
+    }
+
+    return rawText || "Unknown Batch";
+}
+
+function getPlacementStats() {
+    const packageNumbers = allPlacements
+        .map(item => parsePackageNumber(getPackageValue(item)))
+        .filter(Number.isFinite);
+
+    const highestPackage = packageNumbers.length ? Math.max(...packageNumbers) : NaN;
+    const averagePackage = packageNumbers.length
+        ? packageNumbers.reduce((sum, value) => sum + value, 0) / packageNumbers.length
+        : NaN;
+
+    const recruiterCount = new Set(
+        allPlacements
+            .map(getCompanyValue)
+            .filter(Boolean)
+            .map(name => name.toLowerCase())
+    ).size;
+
+    return [
+        {
+            label: "Highest Package",
+            value: formatLpa(highestPackage),
+            note: packageNumbers.length ? "Strongest individual outcome so far." : "Waiting for package data."
+        },
+        {
+            label: "Average Package",
+            value: formatLpa(averagePackage),
+            note: packageNumbers.length ? "Calculated from available placement records." : "Add package values to unlock this metric."
+        },
+        {
+            label: "Placements Recorded",
+            value: String(allPlacements.length),
+            note: allPlacements.length ? "Students with placement offers listed." : "No placement records found yet."
+        },
+        {
+            label: "Internships Recorded",
+            value: String(allInternships.length),
+            note: allInternships.length ? "Internship outcomes tracked separately." : "No internship records found yet."
+        },
+        {
+            label: "Active Recruiters",
+            value: String(recruiterCount),
+            note: recruiterCount ? "Unique companies contributing offers." : "Recruiter data will appear here."
+        }
+    ];
+}
+
+function renderPulseBoard() {
+    const mount = document.getElementById("placementPulseBoard");
+    if (!mount) return;
+
+    const stats = getPlacementStats();
+    mount.innerHTML = "";
+
+    stats.forEach((stat, index) => {
+        const card = document.createElement("article");
+        card.className = "pulse-card";
+        if (index === 0) card.classList.add("pulse-card--accent");
+
+        const label = document.createElement("p");
+        label.className = "pulse-card__label";
+        label.textContent = stat.label;
+
+        const value = document.createElement("strong");
+        value.className = "pulse-card__value";
+        value.textContent = stat.value;
+
+        const note = document.createElement("p");
+        note.className = "pulse-card__note";
+        note.textContent = stat.note;
+
+        card.append(label, value, note);
+        mount.appendChild(card);
+    });
+}
+
+function getRecruiterCounts() {
+    const counts = new Map();
+    allPlacements.forEach(item => {
+        const company = getCompanyValue(item);
+        if (!company) return;
+        const current = counts.get(company) || 0;
+        counts.set(company, current + 1);
+    });
+
+    return Array.from(counts.entries())
+        .map(([company, count]) => ({ company, count }))
+        .sort((left, right) => right.count - left.count || left.company.localeCompare(right.company))
+        .slice(0, 8);
+}
+
+function renderRecruiterWall() {
+    const mount = document.getElementById("recruiterImpactWall");
+    if (!mount) return;
+
+    const recruiters = getRecruiterCounts();
+    mount.innerHTML = "";
+
+    if (!recruiters.length) {
+        const empty = document.createElement("p");
+        empty.className = "dashboard-empty";
+        empty.textContent = "Recruiter impact will appear once placement company data is available.";
+        mount.appendChild(empty);
+        return;
+    }
+
+    const maxCount = Math.max(...recruiters.map(item => item.count));
+    recruiters.forEach((item, index) => {
+        const row = document.createElement("article");
+        row.className = "recruiter-row";
+
+        const company = document.createElement("div");
+        company.className = "recruiter-row__company";
+
+        const rank = document.createElement("span");
+        rank.className = "recruiter-row__rank";
+        rank.textContent = `#${index + 1}`;
+
+        const name = document.createElement("strong");
+        name.textContent = item.company;
+
+        company.append(rank, name);
+
+        const barWrap = document.createElement("div");
+        barWrap.className = "recruiter-row__bar-wrap";
+
+        const bar = document.createElement("div");
+        bar.className = "recruiter-row__bar";
+        bar.style.width = `${(item.count / maxCount) * 100}%`;
+        barWrap.appendChild(bar);
+
+        const metric = document.createElement("div");
+        metric.className = "recruiter-row__metric";
+        metric.innerHTML = `<strong>${item.count}</strong><span>${item.count === 1 ? "offer" : "offers"}</span>`;
+
+        row.append(company, barWrap, metric);
+        mount.appendChild(row);
+    });
+}
+
+function refreshPlacementDashboard() {
+    renderPulseBoard();
+    renderRecruiterWall();
+}
+
+function renderPlacements(filterValue) {
+    const grid = document.getElementById("placementsGrid");
+    if (!grid) return;
+
+    const data = filterValue && filterValue !== "all"
+        ? allPlacements.filter(item => getBatchValue(item) === filterValue)
+        : allPlacements;
+
+    const sorted = [...data].sort(compareByPackageDesc);
+
+    if (!data.length) {
+        grid.innerHTML = "";
+        const empty = document.createElement("p");
+        empty.textContent = "No placement data available.";
+        grid.appendChild(empty);
+        return;
+    }
+
+    const grouped = groupByBatch(sorted);
+    grid.innerHTML = "";
+    const orderedBatches = [
+        ...BATCH_ORDER.filter(label => grouped[label]),
+        ...Object.keys(grouped).filter(label => !BATCH_ORDER.includes(label))
+    ];
+    orderedBatches.forEach(batch => {
+        appendBatchSection(grid, batch, grouped[batch]);
+    });
+}
+
+function renderInternships(filterValue) {
+    const grid = document.getElementById("internshipsGrid");
+    if (!grid) return;
+
+    const data = filterValue && filterValue !== "all"
+        ? allInternships.filter(item => getBatchValue(item) === filterValue)
+        : allInternships;
+
+    if (!data.length) {
+        grid.innerHTML = "";
+        const empty = document.createElement("p");
+        empty.textContent = "No internship data available.";
+        grid.appendChild(empty);
+        return;
+    }
+
+    const grouped = groupByBatch(data);
+    grid.innerHTML = "";
+    const orderedBatches = [
+        ...BATCH_ORDER.filter(label => grouped[label]),
+        ...Object.keys(grouped).filter(label => !BATCH_ORDER.includes(label))
+    ];
+    orderedBatches.forEach(batch => {
+        const heading = document.createElement("h3");
+        heading.textContent = batch;
+        grid.appendChild(heading);
+        grouped[batch].forEach(item => grid.appendChild(createInternshipCard(item)));
+    });
+}
+
+function populateBatchFilter(selectId, items) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    const batches = Array.from(new Set(items.map(getBatchValue)));
+    const ordered = [
+        ...BATCH_ORDER.filter(label => batches.includes(label)),
+        ...batches.filter(label => !BATCH_ORDER.includes(label)).sort()
+    ];
+    select.innerHTML = '<option value="all">All</option>';
+    ordered.forEach(batch => {
+        const option = document.createElement("option");
+        option.value = batch;
+        option.textContent = batch;
+        select.appendChild(option);
+    });
+}
+
+async function loadPlacements() {
+    const grid = document.getElementById("placementsGrid");
+    if (!grid) return;
+
+    try {
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/placements");
+        if (!res.ok) throw new Error("Bad response");
+        const data = normalizeList(await res.json());
+        allPlacements = data;
+
+        populateBatchFilter("batchFilter", data);
+        renderPlacements("all");
+        refreshPlacementDashboard();
+    } catch (err) {
+        console.error("Failed to load placements:", err);
+    }
+}
+
+async function loadInternships() {
+    const grid = document.getElementById("internshipsGrid");
+    if (!grid) return;
+
+    try {
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/internships");
+        if (!res.ok) throw new Error("Bad response");
+        const data = normalizeList(await res.json());
+        allInternships = data;
+
+        populateBatchFilter("internshipBatchFilter", data);
+        renderInternships("all");
+        refreshPlacementDashboard();
+    } catch (err) {
+        console.error("Failed to load internships:", err);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    initPlacementHeroSlider();
+    loadPlacements();
+    loadInternships();
+    const select = document.getElementById("batchFilter");
+    if (select) {
+        select.addEventListener("change", (e) => {
+            renderPlacements(e.target.value);
+        });
+    }
+    const internshipSelect = document.getElementById("internshipBatchFilter");
+    if (internshipSelect) {
+        internshipSelect.addEventListener("change", (e) => {
+            renderInternships(e.target.value);
+        });
+    }
+});
+</script>
+
+</body>
+</html>

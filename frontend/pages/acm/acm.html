@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ACM | CSE (AI & ML)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="api-base" content="http://localhost:8081" />
+  <link rel="stylesheet" href="../../assets/css/main.css" />
+  <link rel="stylesheet" href="../../assets/css/acm.css" />
+</head>
+<body class="theme-page acm-page">
+
+  <iframe
+    class="site-chrome site-chrome--header"
+    src="../../components/header.html"
+    scrolling="no">
+  </iframe>
+
+  <main class="page-shell">
+    <section class="page-hero">
+      <div class="page-hero__layout">
+        <div class="acm-hero-copy">
+          <h1 class="acm-hero-title">
+            <span class="acm-hero-title__short">ACM</span>
+            <span class="acm-hero-title__long">(Association for Computing Machinery)</span>
+          </h1>
+          <div class="page-hero__actions">
+            <a href="../index.html" class="ghost-button">Back Home</a>
+            <a href="#acm-info" class="cta-button">Explore ACM</a>
+          </div>
+        </div>
+        <div class="acm-hero-visual" aria-hidden="true">
+          <div class="acm-hero-logo-frame">
+            <img
+              class="acm-hero-logo"
+              src="../../assets/images/acm-w logo.jpeg"
+              alt="ACM-W logo" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-panel">
+      <section class="acm-container">
+        <section class="acm-card" id="acm-info">
+          <h2>About ACM</h2>
+          <p>Loading ACM information...</p>
+          <div class="info-grid" id="acm-highlights"></div>
+          <div class="link-grid">
+            <a
+              class="link-pill"
+              href="https://www.linkedin.com/in/acm-w-bvrith/"
+              target="_blank"
+              rel="noopener noreferrer">
+              ACM-W LinkedIn
+            </a>
+            <a
+              class="link-pill"
+              href="https://www.instagram.com/acmw_bvrith?igsh=M2diNW14dnRzMDYw"
+              target="_blank"
+              rel="noopener noreferrer">
+              ACM-W Instagram
+            </a>
+            <a
+              class="link-pill"
+              href="https://india.acm.org/"
+              target="_blank"
+              rel="noopener noreferrer">
+              Main ACM Page
+            </a>
+          </div>
+        </section>
+
+        <section class="acm-card">
+          <h2>Member Benefits</h2>
+          <div class="list-grid" id="acm-benefits">
+            <p class="empty-state">Loading benefits...</p>
+          </div>
+        </section>
+
+        <section class="acm-card">
+          <h2>ACM Events</h2>
+          <div class="list-grid" id="acm-events">
+            <p class="empty-state">Loading events...</p>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <div class="report-modal" id="reportModal" hidden>
+    <div class="report-modal__backdrop" data-close-report-modal></div>
+    <div
+      class="report-modal__dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="reportModalTitle">
+      <div class="report-modal__header">
+        <div>
+          <p class="report-modal__eyebrow">ACM Event Report</p>
+          <h2 id="reportModalTitle">Report Preview</h2>
+        </div>
+        <button class="report-modal__close" id="reportModalClose" type="button" aria-label="Close report">
+          Close
+        </button>
+      </div>
+      <div class="report-modal__frame-wrap">
+        <iframe
+          id="reportModalFrame"
+          title="ACM event report preview"
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin">
+        </iframe>
+      </div>
+    </div>
+  </div>
+
+  <iframe
+    class="site-chrome site-chrome--footer"
+    src="../../components/footer.html"
+    scrolling="no">
+  </iframe>
+
+  <script src="./acm.js"></script>
+</body>
+</html>

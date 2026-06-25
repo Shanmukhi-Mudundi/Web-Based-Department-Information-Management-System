@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Weekly Reports | Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <header class="admin-header">
+      <div class="admin-brand">
+        <h1>Weekly Reports Manager</h1>
+        <p>Create and update weekly department activity reports with clearer edit and review sections.</p>
+      </div>
+      <nav class="admin-nav">
+        <a href="./dashboard.html">Dashboard</a>
+        <a href="./announcements-admin.html">Announcements</a>
+        <a href="./achievements-admin.html">Achievements</a>
+        <a href="./timetables-admin.html">Timetables</a>
+        <a class="active" href="./weekly-reports-admin.html">Weekly Reports</a>
+        <a href="./complaints-admin.html">Complaints</a>
+        <a href="../index.html">Back to Site</a>
+        <a href="#" id="logoutBtn">Logout</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-grid">
+      <div class="hero-copy">
+        <div>
+          <p class="eyebrow">Department Reporting</p>
+          <h2>Publish weekly updates.</h2>
+        </div>
+        <p>Add department progress notes, list key highlights line by line, and edit existing entries directly from the same page.</p>
+        <div class="chip-row">
+          <span class="chip">Admin workspace</span>
+          <span class="chip">Edit existing reports</span>
+          <span class="chip">Structured highlights</span>
+        </div>
+      </div>
+      
+    </section>
+
+    <section class="content-grid">
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Create Or Edit</p>
+              <h3>Weekly report composer</h3>
+            </div>
+            <p>Enter the display date, faculty lead, and report summary. When editing an existing row, this form switches to update mode.</p>
+          </div>
+          <form id="reportForm">
+            <div class="form-grid">
+              <div>
+                <label for="date">Display Date</label>
+                <input id="date" name="date" placeholder="Feb 2026">
+              </div>
+              <div>
+                <label for="facultyInCharge">Faculty In-charge</label>
+                <input id="facultyInCharge" name="facultyInCharge" placeholder="Dr. Lakshmi Praveena">
+              </div>
+            </div>
+            <div class="field-block">
+              <label for="title">Title</label>
+              <input id="title" name="title" required placeholder="Academic Planning and Course Kickoff">
+            </div>
+            <div class="field-block">
+              <label for="description">Highlights (one per line)</label>
+              <textarea id="description" name="description" required placeholder="Course plans finalized&#10;Lab slot allocation completed"></textarea>
+            </div>
+            <div class="meta-row">
+              <button class="btn" type="submit" id="saveBtn">Publish Report</button>
+              <button class="btn btn-outline" type="button" id="resetBtn">Clear</button>
+            </div>
+            <p id="status" class="status"></p>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Current Records</p>
+              <h3>Saved weekly reports</h3>
+            </div>
+            <p>Select Edit to load a report into the form or Delete to remove it directly from this manager.</p>
+          </div>
+          <div class="table-wrap">
+            <table class="table" id="reportTable">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Date</th>
+                  <th>Faculty</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="note">To edit, click "Edit" to load the report into the form.</p>
+        </section>
+      </div>
+
+      <aside class="side-panel">
+        <div class="side-block">
+          <p class="eyebrow">Checklist</p>
+          <h3>Before saving</h3>
+          <ul class="info-list">
+            <li>Keep the title focused on the week or activity theme.</li>
+            <li>Use one highlight per line so the public page stays structured.</li>
+            <li>Review the report once after saving to confirm the public page format.</li>
+          </ul>
+        </div>
+        
+      </aside>
+    </section>
+  </div>
+
+  <script>
+    const API_BASE =
+      document.querySelector('meta[name="api-base"]')?.getAttribute("content")?.trim() ||
+      "http://localhost:8081";
+
+    const statusEl = document.getElementById("status");
+    const tableBody = document.querySelector("#reportTable tbody");
+    const resetBtn = document.getElementById("resetBtn");
+    const saveBtn = document.getElementById("saveBtn");
+
+    let editingId = null;
+
+    function setStatus(message, type) {
+      statusEl.textContent = message;
+      statusEl.className = "status" + (type ? " " + type : "");
+    }
+
+    function clearForm() {
+      editingId = null;
+      document.getElementById("reportForm").reset();
+      saveBtn.textContent = "Publish Report";
+    }
+
+    function buildPayload() {
+      return {
+        title: document.getElementById("title").value.trim(),
+        description: document.getElementById("description").value.trim(),
+        facultyInCharge: document.getElementById("facultyInCharge").value.trim(),
+        date: document.getElementById("date").value.trim()
+      };
+    }
+
+    function renderRow(item) {
+      const row = document.createElement("tr");
+      const resolvedId = item.id || item._id || item.ID || item.Id;
+
+      const title = document.createElement("td");
+      title.textContent = item.title || "Weekly Update";
+
+      const date = document.createElement("td");
+      date.textContent = item.date || "-";
+
+      const faculty = document.createElement("td");
+      faculty.textContent = item.facultyInCharge || "-";
+
+      const actions = document.createElement("td");
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn btn-outline";
+      editBtn.textContent = "Edit";
+      editBtn.disabled = !resolvedId;
+      editBtn.addEventListener("click", () => loadIntoForm(item));
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "btn btn-danger";
+      deleteBtn.textContent = "Delete";
+      deleteBtn.disabled = !resolvedId;
+      deleteBtn.addEventListener("click", () => removeReport(resolvedId));
+
+      actions.append(editBtn, deleteBtn);
+      row.append(title, date, faculty, actions);
+      tableBody.appendChild(row);
+    }
+
+    function loadIntoForm(item) {
+      editingId = item.id || item._id || item.ID || item.Id || null;
+      document.getElementById("title").value = item.title || "";
+      document.getElementById("description").value = item.description || "";
+      document.getElementById("facultyInCharge").value = item.facultyInCharge || "";
+      document.getElementById("date").value = item.date || "";
+      saveBtn.textContent = "Update Report";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function loadReports() {
+      tableBody.innerHTML = "";
+      try {
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/weeklyreports");
+        if (!res.ok) throw new Error("Bad response");
+        const data = await res.json();
+        const items = Array.isArray(data?.items)
+          ? data.items
+          : Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data)
+              ? data
+              : [];
+        if (items.length === 0) {
+          const emptyRow = document.createElement("tr");
+          emptyRow.innerHTML = "<td colspan='4'>No weekly reports available.</td>";
+          tableBody.appendChild(emptyRow);
+          return;
+        }
+        items.forEach(renderRow);
+      } catch (err) {
+        setStatus("Unable to load weekly reports. Check the API connection.", "error");
+      }
+    }
+
+    async function removeReport(id) {
+      try {
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/weeklyreports/" + id, {
+          method: "DELETE"
+        });
+        if (!res.ok) throw new Error("Delete failed");
+        setStatus("Weekly report deleted.", "success");
+        loadReports();
+      } catch (err) {
+        setStatus("Delete failed. Check the API connection.", "error");
+      }
+    }
+
+    document.getElementById("reportForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const payload = buildPayload();
+      const url = API_BASE.replace(/\/$/, "") + "/api/weeklyreports" + (editingId ? "/" + editingId : "");
+      const method = editingId ? "PUT" : "POST";
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error("Save failed");
+        setStatus(editingId ? "Weekly report updated." : "Weekly report published.", "success");
+        clearForm();
+        loadReports();
+      } catch (err) {
+        setStatus("Save failed. Check the API connection.", "error");
+      }
+    });
+
+    resetBtn.addEventListener("click", clearForm);
+    document.addEventListener("DOMContentLoaded", loadReports);
+  </script>
+  <script type="module" src="../../assets/js/admin-guard.js"></script>
+</body>
+</html>

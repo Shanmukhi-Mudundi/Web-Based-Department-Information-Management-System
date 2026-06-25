@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Grievances | CSE (AI & ML)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/complaints.css">
+</head>
+<body class="theme-page complaints-page">
+
+<iframe
+    class="site-chrome site-chrome--header"
+    src="../components/header.html"
+    scrolling="no">
+</iframe>
+
+<main class="page-shell">
+    <section class="page-hero">
+        <div class="page-hero__layout">
+            <div>
+                <h1>Grievances</h1>
+                <div class="page-hero__actions">
+                    <a href="index.html" class="ghost-button">Back Home</a>
+                    <a href="#complaintForm" class="cta-button">Submit a Concern</a>
+                </div>
+            </div>
+            
+        </div>
+    </section>
+
+    <section class="content-panel">
+        <div class="section-intro">
+            <div>
+                <h2>Register a complaint</h2>
+            </div>
+        </div>
+
+        <form class="complaint-form" id="complaintForm">
+            <div class="form-group">
+                <label for="name">Name (Optional)</label>
+                <input type="text" id="name" placeholder="Enter your name (optional)">
+            </div>
+
+            <div class="form-group">
+                <label for="role">You are a</label>
+                <select id="role" required>
+                    <option value="">-- Select --</option>
+                    <option>Student</option>
+                    <option>Faculty</option>
+                    <option>Staff</option>
+                    <option>Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email / Phone (Optional)</label>
+                <input type="text" id="email" placeholder="For follow-up (optional)">
+            </div>
+
+            <div class="form-group">
+                <label for="category">Complaint Category</label>
+                <select id="category" required>
+                    <option value="">-- Select --</option>
+                    <option>Academic</option>
+                    <option>Infrastructure</option>
+                    <option>Faculty Related</option>
+                    <option>Examinations</option>
+                    <option>Timetable</option>
+                    <option>Other</option>
+                </select>
+            </div>
+
+            <div class="form-group form-group--full">
+                <label for="complaint">Complaint Details</label>
+                <textarea id="complaint" rows="5" required
+                    placeholder="Describe your complaint clearly and respectfully"></textarea>
+            </div>
+
+            <p class="form-status" id="complaintStatus" aria-live="polite"></p>
+            <button type="submit" class="cta-button submit-button" id="complaintSubmitBtn">Submit Complaint</button>
+        </form>
+    </section>
+</main>
+
+<iframe
+    class="site-chrome site-chrome--footer"
+    src="../components/footer.html"
+    scrolling="no">
+</iframe>
+
+<script>
+const API_BASE =
+    document.querySelector('meta[name="api-base"]')?.getAttribute("content")?.trim() ||
+    "http://localhost:8081";
+const complaintForm = document.getElementById("complaintForm");
+const complaintStatus = document.getElementById("complaintStatus");
+const complaintSubmitBtn = document.getElementById("complaintSubmitBtn");
+
+function setComplaintStatus(message, type) {
+    if (!complaintStatus) return;
+    complaintStatus.textContent = message;
+    complaintStatus.className = "form-status" + (type ? " is-" + type : "");
+}
+
+function setSubmitting(isSubmitting) {
+    if (!complaintSubmitBtn) return;
+    complaintSubmitBtn.disabled = isSubmitting;
+    complaintSubmitBtn.textContent = isSubmitting ? "Submitting..." : "Submit Complaint";
+}
+
+async function submitComplaint(e) {
+    e.preventDefault();
+
+    const nameField = document.getElementById("name");
+    const roleField = document.getElementById("role");
+    const contactField = document.getElementById("email");
+    const categoryField = document.getElementById("category");
+    const complaintField = document.getElementById("complaint");
+    const name = nameField.value.trim();
+    const role = roleField.value;
+    const contact = contactField.value.trim();
+    const category = categoryField.value;
+    const complaintText = complaintField.value.trim();
+
+    setComplaintStatus("", "");
+
+    if (!role) {
+        setComplaintStatus("Please select your role.", "error");
+        roleField.focus();
+        return;
+    }
+
+    if (!category) {
+        setComplaintStatus("Please select a complaint category.", "error");
+        categoryField.focus();
+        return;
+    }
+
+    if (!complaintText) {
+        setComplaintStatus("Please enter complaint details.", "error");
+        complaintField.focus();
+        return;
+    }
+
+    const payload = {
+        name,
+        role,
+        contact,
+        category,
+        details: complaintText,
+        // Keep legacy keys during the backend transition so older builds
+        // still store the complaint body and submission date in MongoDB.
+        message: complaintText,
+        date: new Date().toISOString()
+    };
+
+    try {
+        setSubmitting(true);
+        setComplaintStatus("Submitting your complaint securely...", "pending");
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/complaints", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            throw new Error("Request failed");
+        }
+
+        setComplaintStatus("Complaint submitted successfully.", "success");
+        complaintForm?.reset();
+    } catch (err) {
+        console.error("Failed to submit complaint:", err);
+        setComplaintStatus("Failed to submit complaint. Please try again.", "error");
+    } finally {
+        setSubmitting(false);
+    }
+}
+
+complaintForm?.addEventListener("submit", submitComplaint);
+</script>
+
+</body>
+</html>

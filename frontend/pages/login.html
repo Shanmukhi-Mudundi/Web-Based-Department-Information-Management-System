@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+
+<body class="login-page">
+
+<iframe
+    class="site-chrome site-chrome--header"
+    src="../components/header.html"
+    scrolling="no">
+</iframe>
+
+<main class="page-shell">
+    <section class="page-hero">
+        <div class="login-layout">
+            <div>
+                <h1>Admin Login</h1>
+                <div class="page-hero__actions">
+                    <a href="./index.html" class="ghost-button">Back Home</a>
+                    <a href="./admin/dashboard.html" class="ghost-button">Admin Dashboard</a>
+                </div>
+            </div>
+
+            <div class="login-card">
+                <h2>Secure Admin Access</h2>
+                <p>Sign in with your admin credentials or continue with Google.</p>
+
+                <div class="error" id="errorMsg" style="display: none;">Invalid username or password</div>
+
+                <form id="loginForm" class="form-stack">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="email" id="username" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required>
+                    </div>
+
+                    <button type="submit" class="cta-button">Login</button>
+                </form>
+
+                <div class="login-divider" aria-hidden="true">
+                    <span>or</span>
+                </div>
+
+                <button type="button" class="google-button" id="googleLoginBtn">
+                    <span class="google-button__icon">G</span>
+                    <span>Continue With Google</span>
+                </button>
+
+                <div class="note">
+                    This system is monitored for security purposes.
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<iframe
+    class="site-chrome site-chrome--footer"
+    src="../components/footer.html"
+    scrolling="no">
+</iframe>
+
+<script type="module">
+    import { auth } from "../assets/js/firebase-init.js";
+    import {
+        getRedirectResult,
+        onAuthStateChanged,
+        signInWithEmailAndPassword,
+        signInWithPopup,
+        signInWithRedirect,
+        signOut
+    } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+    import { googleProvider } from "../assets/js/firebase-init.js";
+    import {
+        dashboardPath,
+        isAllowedAdminEmail,
+        loginPath
+    } from "../assets/js/admin-auth.js";
+
+    const errorMsg = document.getElementById("errorMsg");
+    const loginForm = document.getElementById("loginForm");
+    const googleLoginBtn = document.getElementById("googleLoginBtn");
+
+    function showError(message) {
+        errorMsg.textContent = message;
+        errorMsg.style.display = "block";
+    }
+
+    function clearError() {
+        errorMsg.style.display = "none";
+    }
+
+    function getGoogleErrorMessage(err) {
+        switch (err?.code) {
+            case "auth/popup-closed-by-user":
+                return "Google sign-in was closed before completion.";
+            case "auth/popup-blocked":
+                return "Popup was blocked by the browser. Redirecting to Google sign-in instead...";
+            case "auth/cancelled-popup-request":
+                return "Another sign-in attempt is already in progress.";
+            case "auth/unauthorized-domain":
+                return "This domain is not authorized in Firebase. Add your current host in Firebase Authentication > Settings > Authorized domains.";
+            case "auth/operation-not-allowed":
+                return "Google sign-in is not enabled in Firebase Authentication for this project.";
+            case "auth/invalid-credential":
+                return "Google sign-in returned an invalid credential. Please try again.";
+            default:
+                return "Google sign-in failed. Check Firebase Google auth settings and try again.";
+        }
+    }
+
+    async function completeAdminLogin(user) {
+        if (!user || !isAllowedAdminEmail(user.email)) {
+            await signOut(auth);
+            showError("This Google account is not authorized for admin access.");
+            return;
+        }
+        window.location.href = dashboardPath;
+    }
+
+    async function handleGoogleLogin() {
+        clearError();
+        try {
+            const credential = await signInWithPopup(auth, googleProvider);
+            await completeAdminLogin(credential.user);
+        } catch (err) {
+            if (err?.code === "auth/popup-blocked") {
+                showError(getGoogleErrorMessage(err));
+                await signInWithRedirect(auth, googleProvider);
+                return;
+            }
+            showError(getGoogleErrorMessage(err));
+            console.error("Google sign-in failed:", err);
+        }
+    }
+
+    loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        clearError();
+        const email = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
+        try {
+            const credential = await signInWithEmailAndPassword(auth, email, password);
+            await completeAdminLogin(credential.user);
+        } catch (err) {
+            showError("Invalid email or password.");
+        }
+    });
+
+    googleLoginBtn.addEventListener("click", handleGoogleLogin);
+
+    getRedirectResult(auth)
+        .then(async (result) => {
+            if (result?.user) {
+                await completeAdminLogin(result.user);
+            }
+        })
+        .catch((err) => {
+            showError(getGoogleErrorMessage(err));
+            console.error("Google redirect sign-in failed:", err);
+        });
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) {
+            return;
+        }
+        if (window.location.pathname === loginPath && isAllowedAdminEmail(user.email)) {
+            window.location.href = dashboardPath;
+        }
+    });
+
+</script>
+
+</body>
+</html>

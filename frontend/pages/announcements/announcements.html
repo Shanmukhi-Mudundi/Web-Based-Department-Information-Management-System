@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Announcements | CSE (AI & ML)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="api-base" content="http://localhost:8081">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/announcements.css">
+</head>
+<body class="theme-page announcements-page">
+
+    <iframe
+        class="site-chrome site-chrome--header"
+        src="../../components/header.html"
+        scrolling="no">
+    </iframe>
+
+    <main class="page-shell">
+        <section class="page-hero">
+            <div class="page-hero__layout">
+                <div>
+                    <h1>Announcements</h1>
+                    <div class="page-hero__actions">
+                        <a href="../index.html" class="ghost-button">Back Home</a>
+                        <a href="#announcementFeed" class="cta-button">Open Feed</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="content-panel">
+            <div class="section-intro">
+                <div>
+                    <h2>Announcements</h2>
+                </div>
+            </div>
+
+            <section class="announcement-container" id="announcementFeed">
+                <p>Loading announcements...</p>
+            </section>
+        </section>
+    </main>
+
+    <div class="modal-backdrop" id="announcementModal" aria-hidden="true">
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <button class="modal-close" type="button" aria-label="Close modal">×</button>
+            <div class="modal-body">
+                <span class="modal-tag" id="modalTag">NOTICE</span>
+                <h2 id="modalTitle">Announcement</h2>
+                <p class="modal-date" id="modalDate"></p>
+                <p class="modal-message" id="modalMessage"></p>
+                <div class="modal-extra" id="modalExtra"></div>
+            </div>
+        </div>
+    </div>
+
+    <iframe
+        class="site-chrome site-chrome--footer"
+        src="../../components/footer.html"
+        scrolling="no">
+    </iframe>
+
+<script>
+const API_BASE =
+    document.querySelector('meta[name="api-base"]')?.getAttribute("content")?.trim() ||
+    "http://localhost:8081";
+
+function normalizeList(data) {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.items)) return data.items;
+    if (Array.isArray(data?.data)) return data.data;
+    return [];
+}
+
+const modalBackdrop = document.getElementById("announcementModal");
+const modalCloseBtn = modalBackdrop?.querySelector(".modal-close");
+const modalTitle = document.getElementById("modalTitle");
+const modalTag = document.getElementById("modalTag");
+const modalDate = document.getElementById("modalDate");
+const modalMessage = document.getElementById("modalMessage");
+const modalExtra = document.getElementById("modalExtra");
+const announcementDetailsCache = new Map();
+
+function closeModal() {
+    if (!modalBackdrop) return;
+    modalBackdrop.classList.remove("open");
+    modalBackdrop.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+}
+
+function resolveMessage(item, fallbackMessage, allowPlaceholder) {
+    const candidates = [
+        item?.message,
+        item?.body,
+        item?.description,
+        item?.details,
+        item?.content,
+        item?.notice,
+        item?.text,
+        item?.summary,
+        fallbackMessage
+    ];
+    const picked = candidates.find(value => value !== undefined && value !== null && String(value).trim() !== "");
+    if (picked !== undefined) return String(picked).trim();
+    return allowPlaceholder ? "Details will be updated soon." : "";
+}
+
+function renderModal(item, fallbackMessage) {
+    const isImportant = Boolean(item.important) || String(item.tag || "").toUpperCase() === "IMPORTANT";
+    const tagText = (item.tag || item.type || (isImportant ? "IMPORTANT" : "NOTICE")).toUpperCase();
+    const titleText = item.title || item.eventName || item.name || "Announcement";
+    const messageText = resolveMessage(item, fallbackMessage, true);
+    const displayDate = item.date || item.postedAt || item.createdAt || "";
+
+    if (modalTag) modalTag.textContent = tagText;
+    if (modalTitle) modalTitle.textContent = titleText;
+    if (modalMessage) modalMessage.textContent = messageText;
+    if (modalDate) modalDate.textContent = displayDate ? "Posted on: " + displayDate : "";
+
+    if (modalExtra) {
+        modalExtra.innerHTML = "";
+        const extras = getExtraFields(item);
+        if (extras.length) {
+            const heading = document.createElement("h4");
+            heading.textContent = "More Details";
+            modalExtra.appendChild(heading);
+            const list = document.createElement("ul");
+            extras.forEach(({ label, value, isLink }) => {
+                const li = document.createElement("li");
+                const strong = document.createElement("strong");
+                strong.textContent = label + ": ";
+                li.appendChild(strong);
+                if (isLink) {
+                    const link = document.createElement("a");
+                    link.href = value;
+                    link.textContent = value;
+                    link.target = "_blank";
+                    link.rel = "noopener noreferrer";
+                    li.appendChild(link);
+                } else {
+                    li.appendChild(document.createTextNode(value));
+                }
+                list.appendChild(li);
+            });
+            modalExtra.appendChild(list);
+        }
+    }
+}
+
+async function fetchAnnouncementDetails(item) {
+    const id = item?._id || item?.id;
+    if (!id) return null;
+    if (announcementDetailsCache.has(id)) return announcementDetailsCache.get(id);
+
+    try {
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/announcements/" + id);
+        if (!res.ok) return null;
+        const raw = await res.json();
+        let detail = raw;
+        if (Array.isArray(raw)) detail = raw[0];
+        if (Array.isArray(raw?.items)) detail = raw.items[0];
+        if (Array.isArray(raw?.data)) detail = raw.data[0];
+        if (raw?.data && !Array.isArray(raw.data)) detail = raw.data;
+        if (raw?.item) detail = raw.item;
+        if (!detail || typeof detail !== "object") return null;
+        announcementDetailsCache.set(id, detail);
+        return detail;
+    } catch {
+        return null;
+    }
+}
+
+async function openModal(item, fallbackMessage) {
+    if (!modalBackdrop) return;
+
+    renderModal(item, fallbackMessage);
+    modalBackdrop.classList.add("open");
+    modalBackdrop.setAttribute("aria-hidden", "false");
+    document.body.classList.add("modal-open");
+
+    const detail = await fetchAnnouncementDetails(item);
+    if (detail) {
+        const merged = { ...item, ...detail };
+        renderModal(merged, fallbackMessage);
+    }
+}
+
+function getExtraFields(item) {
+    const fields = [];
+    const knownKeys = new Set([
+        "_id", "id", "title", "eventName", "name", "message", "body", "description",
+        "tag", "type", "important", "date", "postedAt", "createdAt"
+    ]);
+
+    const addField = (label, value, isLink = false) => {
+        if (value === undefined || value === null || String(value).trim() === "") return;
+        fields.push({ label, value: String(value).trim(), isLink });
+    };
+
+    addField("Department", item.department);
+    addField("Audience", item.audience);
+    addField("Venue", item.venue || item.location);
+    addField("Time", item.time);
+    addField("Deadline", item.deadline);
+    addField("Contact", item.contact || item.coordinator);
+    addField("Posted By", item.postedBy || item.author);
+    addField("Batch", item.batch);
+    addField("Year", item.year);
+    addField("Semester", item.semester);
+
+    if (item.link) addField("Link", item.link, true);
+    if (item.attachment || item.attachmentUrl) addField("Attachment", item.attachment || item.attachmentUrl, true);
+
+    Object.entries(item || {}).forEach(([key, value]) => {
+        if (knownKeys.has(key)) return;
+        if (fields.some(field => field.label.toLowerCase() === key.toLowerCase())) return;
+        if (typeof value === "object") return;
+        const label = key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/_/g, " ");
+        addField(label.charAt(0).toUpperCase() + label.slice(1), value);
+    });
+
+    return fields;
+}
+
+function createAnnouncementCard(item) {
+    const card = document.createElement("div");
+    const isImportant = Boolean(item.important) || String(item.tag || "").toUpperCase() === "IMPORTANT";
+    card.className = "announcement" + (isImportant ? " important" : "");
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.setAttribute("aria-label", "Open announcement details");
+
+    const tag = document.createElement("span");
+    tag.className = "tag" + (isImportant ? "" : " normal");
+    tag.textContent = (item.tag || item.type || (isImportant ? "IMPORTANT" : "NOTICE")).toUpperCase();
+
+    const title = document.createElement("h3");
+    title.textContent = item.title || item.eventName || item.name || "Announcement";
+
+    const message = document.createElement("p");
+    const messageText = resolveMessage(item, "", false);
+    message.textContent = messageText;
+    if (messageText) card.dataset.message = messageText;
+
+    card.append(tag, title, message);
+
+    const displayDate = item.date || item.postedAt || item.createdAt;
+    if (displayDate) {
+        const date = document.createElement("span");
+        date.className = "date";
+        date.textContent = "Posted on: " + displayDate;
+        card.appendChild(date);
+    }
+
+    card.addEventListener("click", () => openModal(item, card.dataset.message || ""));
+    card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openModal(item, card.dataset.message || "");
+        }
+    });
+
+    return card;
+}
+
+function sortByRecent(items) {
+    const parseDateValue = (value) => {
+        if (!value) return null;
+        if (typeof value === "number") return value;
+        let raw = String(value).trim();
+        if (!raw) return null;
+        raw = raw.replace(/^posted on:\s*/i, "");
+        const parsed = Date.parse(raw);
+        if (!Number.isNaN(parsed)) return parsed;
+
+        const monthMap = {
+            jan: 0, january: 0,
+            feb: 1, february: 1,
+            mar: 2, march: 2,
+            apr: 3, april: 3,
+            may: 4,
+            jun: 5, june: 5,
+            jul: 6, july: 6,
+            aug: 7, august: 7,
+            sep: 8, sept: 8, september: 8,
+            oct: 9, october: 9,
+            nov: 10, november: 10,
+            dec: 11, december: 11
+        };
+
+        const named = raw.match(/^(\d{1,2})\s*([A-Za-z]{3,})\s*(\d{4})$/);
+        if (named) {
+            const day = Number(named[1]);
+            const month = monthMap[named[2].toLowerCase()];
+            const year = Number(named[3]);
+            if (!Number.isNaN(day) && month !== undefined && !Number.isNaN(year)) {
+                return new Date(year, month, day).getTime();
+            }
+        }
+
+        const dmy = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+        if (dmy) {
+            const day = Number(dmy[1]);
+            const month = Number(dmy[2]) - 1;
+            const year = Number(dmy[3]);
+            if (!Number.isNaN(day) && !Number.isNaN(month) && !Number.isNaN(year)) {
+                return new Date(year, month, day).getTime();
+            }
+        }
+
+        return null;
+    };
+
+    return items
+        .map((item, index) => ({
+            item,
+            index,
+            time: parseDateValue(item?.postedAt || item?.date || item?.createdAt)
+        }))
+        .sort((a, b) => {
+            if (a.time === null && b.time === null) return b.index - a.index;
+            if (a.time === null) return 1;
+            if (b.time === null) return -1;
+            return b.time - a.time;
+        })
+        .map(entry => entry.item);
+}
+
+async function loadAnnouncements() {
+    const container = document.querySelector(".announcement-container");
+    if (!container) return;
+
+    try {
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/announcements");
+        if (!res.ok) throw new Error("Bad response");
+        const data = normalizeList(await res.json());
+        container.innerHTML = "";
+
+        if (data.length === 0) {
+            const empty = document.createElement("p");
+            empty.textContent = "No announcements available.";
+            container.appendChild(empty);
+            return;
+        }
+
+        sortByRecent(data).forEach(item => container.appendChild(createAnnouncementCard(item)));
+    } catch (err) {
+        container.innerHTML = "";
+        const errorMsg = document.createElement("p");
+        errorMsg.textContent = "Unable to load announcements right now.";
+        container.appendChild(errorMsg);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", loadAnnouncements);
+
+if (modalBackdrop) {
+    modalBackdrop.addEventListener("click", (event) => {
+        if (event.target === modalBackdrop) closeModal();
+    });
+}
+
+if (modalCloseBtn) {
+    modalCloseBtn.addEventListener("click", closeModal);
+}
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeModal();
+});
+</script>
+
+</body>
+</html>

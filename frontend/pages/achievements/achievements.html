@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CSE (AI & ML) Achievements</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="api-base" content="http://localhost:8081">
+
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/achievements.css">
+</head>
+<body class="theme-page achievements-page">
+
+  <iframe
+      class="site-chrome site-chrome--header"
+      src="../../components/header.html"
+      scrolling="no">
+  </iframe>
+
+<main class="page-shell">
+    <section class="page-hero">
+        <div class="page-hero__layout">
+            <div>
+                <h1>Achievements</h1>
+                <div class="page-hero__actions">
+                    <a href="../index.html" class="ghost-button">Back Home</a>
+                    <a href="#achievementsGrid" class="cta-button">View Achievements</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content-panel">
+        <div class="section-intro">
+            <div>
+                <h2>Achievements</h2>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <div class="filter-field">
+                <label for="achievementMonthFilter">Month</label>
+                <select id="achievementMonthFilter" class="filter-select">
+                    <option value="all">All Months</option>
+                </select>
+            </div>
+            <div class="filter-field">
+                <label for="achievementYearFilter">Academic Year</label>
+                <select id="achievementYearFilter" class="filter-select">
+                    <option value="all">All Academic Years</option>
+                </select>
+            </div>
+        </div>
+
+        <section class="achievements-grid" id="achievementsGrid">
+            <p class="status-message">Loading achievements...</p>
+        </section>
+    </section>
+</main>
+
+<div class="achievement-modal" id="achievementModal" hidden>
+    <div class="achievement-modal__backdrop" data-close-modal></div>
+    <div class="achievement-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="achievementModalTitle">
+        <button class="achievement-modal__close" id="achievementModalClose" type="button" aria-label="Close achievement details">&times;</button>
+        <h3 class="achievement-modal__title" id="achievementModalTitle">Achievement</h3>
+        <p class="achievement-modal__name" id="achievementModalName"></p>
+        <p class="achievement-modal__result" id="achievementModalResult"></p>
+        <div class="achievement-modal__details" id="achievementModalDetails"></div>
+    </div>
+</div>
+
+  <iframe
+      class="site-chrome site-chrome--footer"
+      src="../../components/footer.html"
+      scrolling="no">
+  </iframe>
+
+<script>
+const API_BASE =
+    document.querySelector('meta[name="api-base"]')?.getAttribute("content")?.trim() ||
+    "http://localhost:8081";
+
+function normalizeList(data) {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.items)) return data.items;
+    if (Array.isArray(data?.data)) return data.data;
+    return [];
+}
+
+function normalizeText(value) {
+    return (value || "").toString().trim();
+}
+
+function pickText(item, names) {
+    for (const name of names) {
+        const value = normalizeText(item?.[name]);
+        if (value) return value;
+    }
+    return "";
+}
+
+function normalizeAchievement(item) {
+    const raw = item?.raw && typeof item.raw === "object" ? item.raw : item;
+    const studentName = pickText(raw, ["Name of the Student", "studentName", "name", "student", "student_name", "studentFullName", "fullName"]);
+    const result = pickText(raw, ["Prize Secured/Participation", "result", "achievement", "achievementType", "achievement_type", "award", "prize", "position", "recognition"]);
+    const eventName = pickText(raw, ["Event Name", "eventName", "title", "name"]);
+    const activity = pickText(raw, ["Name of the Activity", "activity", "category", "type"]);
+    const organizedBy = pickText(raw, ["Organized by", "organizedBy", "organiser", "organizer"]);
+    const yearOfStudy = pickText(raw, ["Year of the Study", "yearOfStudy", "year"]);
+    const academicYear = pickText(raw, ["academicYear", "academic_year", "academic year", "yearOfStudy", "year"]);
+    const date = pickText(raw, ["Date of the Events", "date", "eventDate", "achievementDate", "achievement_date", "awardedOn", "createdAt"]);
+    const id = pickText(item, ["id", "_id"]);
+    const parsedDateInfo = parseAchievementDateInfo(date);
+
+    return {
+        id,
+        studentName,
+        result: result || "Achievement",
+        eventName: eventName || "Event details",
+        activity,
+        organizedBy,
+        yearOfStudy,
+        academicYear,
+        date,
+        sortValue: parsedDateInfo.sortValue,
+        monthKey: parsedDateInfo.monthKey,
+        yearKey: academicYear || parsedDateInfo.yearKey
+    };
+}
+
+const MONTH_INDEX = {
+    january: 1, jan: 1,
+    february: 2, feb: 2,
+    march: 3, mar: 3,
+    april: 4, apr: 4,
+    may: 5,
+    june: 6, jun: 6,
+    july: 7, jul: 7,
+    august: 8, aug: 8,
+    september: 9, sep: 9, sept: 9,
+    october: 10, oct: 10,
+    november: 11, nov: 11,
+    december: 12, dec: 12
+};
+
+function toComparableDate(year, month = 12, day = 31) {
+    const safeMonth = Math.max(1, Math.min(12, Number(month) || 12));
+    const safeDay = Math.max(1, Math.min(31, Number(day) || 31));
+    return Number(year) * 10000 + safeMonth * 100 + safeDay;
+}
+
+function parseAchievementDateInfo(value) {
+    const raw = normalizeText(value);
+    if (!raw) {
+        return {
+            sortValue: Number.NEGATIVE_INFINITY,
+            monthKey: "",
+            yearKey: ""
+        };
+    }
+
+    if (/^\d{4}$/.test(raw)) {
+        const year = String(Number(raw));
+        return {
+            sortValue: toComparableDate(Number(raw)),
+            monthKey: "",
+            yearKey: year
+        };
+    }
+
+    const normalized = raw
+        .toLowerCase()
+        .replace(/(\d+)\s*(st|nd|rd|th)\b/g, "$1")
+        .replace(/,/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    const candidates = [];
+    const addCandidate = (year, month = 12, day = 31) => {
+        if (!year || Number.isNaN(Number(year))) return;
+        candidates.push({
+            sortValue: toComparableDate(year, month, day),
+            monthKey: month ? String(month).padStart(2, "0") : "",
+            yearKey: String(year)
+        });
+    };
+
+    for (const match of normalized.matchAll(/\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b/g)) {
+        addCandidate(match[3], match[2], match[1]);
+    }
+
+    for (const match of normalized.matchAll(/\b(\d{1,2})\s+([a-z]+)\s+(\d{4})\b/g)) {
+        const month = MONTH_INDEX[match[2]];
+        if (month) addCandidate(match[3], month, match[1]);
+    }
+
+    for (const match of normalized.matchAll(/\b([a-z]+)\s+(\d{1,2})(?:\s+(?:and|to|&)\s+(\d{1,2}))?\s+(\d{4})\b/g)) {
+        const month = MONTH_INDEX[match[1]];
+        const day = Math.max(Number(match[2]), Number(match[3] || match[2]));
+        if (month) addCandidate(match[4], month, day);
+    }
+
+    for (const match of normalized.matchAll(/\b(\d{1,2})\s+([a-z]+)\s*-\s*(\d{1,2})\s+([a-z]+)\s+(\d{4})\b/g)) {
+        const firstMonth = MONTH_INDEX[match[2]];
+        const secondMonth = MONTH_INDEX[match[4]];
+        if (firstMonth) addCandidate(match[5], firstMonth, match[1]);
+        if (secondMonth) addCandidate(match[5], secondMonth, match[3]);
+    }
+
+    if (candidates.length === 0) {
+        for (const match of normalized.matchAll(/\b(19|20)\d{2}\b/g)) {
+            addCandidate(match[0]);
+        }
+    }
+
+    if (candidates.length === 0) {
+        return {
+            sortValue: Number.NEGATIVE_INFINITY,
+            monthKey: "",
+            yearKey: ""
+        };
+    }
+
+    return candidates.reduce((best, current) => current.sortValue > best.sortValue ? current : best);
+}
+
+function sortAchievements(items) {
+    return [...items].sort((first, second) => {
+        const byDate = (second.sortValue || Number.NEGATIVE_INFINITY) - (first.sortValue || Number.NEGATIVE_INFINITY);
+        if (byDate !== 0) return byDate;
+        return normalizeText(second.id).localeCompare(normalizeText(first.id));
+    });
+}
+
+function getMonthLabel(monthKey) {
+    if (!monthKey) return "";
+    const monthIndex = Number(monthKey) - 1;
+    const date = new Date(2000, monthIndex, 1);
+    return date.toLocaleString(undefined, { month: "long" });
+}
+
+function populateAchievementFilters(items) {
+    const monthFilter = document.getElementById("achievementMonthFilter");
+    const yearFilter = document.getElementById("achievementYearFilter");
+    if (!monthFilter || !yearFilter) return;
+
+    const months = Array.from(new Set(items.map(item => item.monthKey).filter(Boolean)))
+        .sort((a, b) => Number(a) - Number(b));
+    const years = Array.from(new Set(items.map(item => normalizeText(item.yearKey)).filter(Boolean)))
+        .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+
+    monthFilter.innerHTML = '<option value="all">All Months</option>';
+    yearFilter.innerHTML = '<option value="all">All Academic Years</option>';
+
+    months.forEach(monthKey => {
+        const option = document.createElement("option");
+        option.value = monthKey;
+        option.textContent = getMonthLabel(monthKey);
+        monthFilter.appendChild(option);
+    });
+
+    years.forEach(year => {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = year;
+        yearFilter.appendChild(option);
+    });
+}
+
+function getFilteredAchievements(items) {
+    const monthFilter = document.getElementById("achievementMonthFilter");
+    const yearFilter = document.getElementById("achievementYearFilter");
+    const selectedMonth = monthFilter?.value || "all";
+    const selectedYear = yearFilter?.value || "all";
+
+    return items.filter(item => {
+        const monthMatches = selectedMonth === "all" || item.monthKey === selectedMonth;
+        const yearMatches = selectedYear === "all" || normalizeText(item.yearKey) === selectedYear;
+        return monthMatches && yearMatches;
+    });
+}
+
+function setText(elementId, value, fallback = "") {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    const text = normalizeText(value) || fallback;
+    element.textContent = text;
+    element.hidden = !text;
+}
+
+function renderModalDetail(label, value) {
+    const text = normalizeText(value);
+    if (!text) return "";
+    return "<div class=\"achievement-modal__detail\"><span>" + label + "</span><strong>" + text + "</strong></div>";
+}
+
+function openAchievementModal(item) {
+    setText("achievementModalTitle", item.eventName, "Event details");
+    setText("achievementModalName", item.studentName ? "Student: " + item.studentName : "", "");
+    setText("achievementModalResult", item.result ? "Result: " + item.result : "", "");
+
+    const details = document.getElementById("achievementModalDetails");
+    if (details) {
+        details.innerHTML =
+            renderModalDetail("Activity", item.activity) +
+            renderModalDetail("Organized By", item.organizedBy) +
+            renderModalDetail("Year of Study", item.yearOfStudy) +
+            renderModalDetail("Event Date", item.date);
+    }
+
+    const modal = document.getElementById("achievementModal");
+    if (!modal) return;
+    modal.hidden = false;
+    document.body.classList.add("modal-open");
+    document.getElementById("achievementModalClose")?.focus();
+}
+
+function closeAchievementModal() {
+    const modal = document.getElementById("achievementModal");
+    if (!modal) return;
+    modal.hidden = true;
+    document.body.classList.remove("modal-open");
+}
+
+function createAchievementCard(item) {
+    const card = document.createElement("div");
+    card.className = "achievement-card";
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.setAttribute("aria-label", "View details for " + item.studentName);
+    card.addEventListener("click", () => openAchievementModal(item));
+    card.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openAchievementModal(item);
+        }
+    });
+
+    const title = document.createElement("h3");
+    title.textContent = item.studentName || "Student";
+
+    const result = document.createElement("p");
+    result.className = "achievement-result";
+    result.textContent = item.result || "Achievement";
+
+    const eventName = document.createElement("p");
+    eventName.className = "achievement-event";
+    eventName.textContent = item.eventName || "Click to view event details.";
+
+    const date = document.createElement("span");
+    date.className = "year";
+    date.textContent = item.date || "";
+
+    const cta = document.createElement("span");
+    cta.className = "achievement-cta";
+    cta.textContent = "View details";
+
+    card.append(title, result, eventName);
+    if (item.date) {
+        card.appendChild(date);
+    }
+    card.appendChild(cta);
+
+    return card;
+}
+
+async function loadAchievements() {
+    const grid = document.getElementById("achievementsGrid");
+    if (!grid) return;
+
+    try {
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/achievements");
+        if (!res.ok) throw new Error("Bad response");
+        const data = sortAchievements(normalizeList(await res.json()).map(normalizeAchievement));
+        grid.innerHTML = "";
+
+        if (data.length === 0) {
+            const empty = document.createElement("p");
+            empty.className = "status-message";
+            empty.textContent = "No achievements available.";
+            grid.appendChild(empty);
+            return;
+        }
+
+        populateAchievementFilters(data);
+
+        const renderCurrent = () => {
+            renderAchievements(getFilteredAchievements(data));
+        };
+
+        document.getElementById("achievementMonthFilter")?.addEventListener("change", renderCurrent);
+        document.getElementById("achievementYearFilter")?.addEventListener("change", renderCurrent);
+        renderCurrent();
+    } catch (err) {
+        console.error("Failed to load achievements:", err);
+        grid.innerHTML = "<p class=\"status-message\">Unable to load achievements right now.</p>";
+    }
+}
+
+function renderAchievements(items) {
+    const grid = document.getElementById("achievementsGrid");
+    if (!grid) return;
+
+    grid.innerHTML = "";
+    if (!items.length) {
+        const empty = document.createElement("p");
+        empty.className = "status-message";
+        empty.textContent = "No achievements available for the selected filters.";
+        grid.appendChild(empty);
+        return;
+    }
+
+    items.forEach(item => grid.appendChild(createAchievementCard(item)));
+}
+
+document.addEventListener("DOMContentLoaded", loadAchievements);
+document.getElementById("achievementModalClose")?.addEventListener("click", closeAchievementModal);
+document.querySelector("[data-close-modal]")?.addEventListener("click", closeAchievementModal);
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+        closeAchievementModal();
+    }
+});
+</script>
+
+</body>
+</html>

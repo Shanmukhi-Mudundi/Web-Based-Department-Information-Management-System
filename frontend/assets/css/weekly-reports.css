@@ -1,0 +1,46 @@
+.reports-list {
+    display: grid;
+    gap: 18px;
+}
+
+.report-card {
+    padding: 22px;
+    border-radius: 24px;
+    background: linear-gradient(160deg, #fffaf2, #f2e8dc 88%);
+    border: 1px solid rgba(44, 31, 18, 0.08);
+    box-shadow: 0 14px 28px rgba(11, 14, 28, 0.08);
+}
+
+.week-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(255, 122, 26, 0.14);
+    color: #9a4700;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.report-card h2 {
+    margin-top: 14px;
+    font-family: "Cormorant Garamond", serif;
+    font-size: 38px;
+    line-height: 0.94;
+    color: #1f1923;
+}
+
+.report-card ul {
+    padding-left: 20px;
+    margin-top: 14px;
+}
+
+.report-card li {
+    color: #5d5661;
+}
+
+.report-card li + li {
+    margin-top: 8px;
+}

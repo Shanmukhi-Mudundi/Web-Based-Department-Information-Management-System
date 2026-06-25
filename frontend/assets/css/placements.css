@@ -1,0 +1,567 @@
+.placements-hero__copy {
+    max-width: 520px;
+}
+
+.placements-hero__summary {
+    max-width: 480px;
+    margin: 16px 0 0;
+    color: rgba(248, 242, 235, 0.76);
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+.hero-slider {
+    position: relative;
+    display: grid;
+    gap: 16px;
+    align-self: stretch;
+}
+
+.hero-slider__viewport {
+    position: relative;
+    min-height: 320px;
+    border-radius: 28px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background:
+        radial-gradient(circle at top right, rgba(255, 173, 102, 0.18), transparent 28%),
+        rgba(7, 11, 29, 0.74);
+    box-shadow:
+        0 24px 48px rgba(5, 10, 28, 0.36),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.hero-slider__track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: inherit;
+}
+
+.hero-slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transform: scale(1.03);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    pointer-events: none;
+}
+
+.hero-slide.is-active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+.hero-slide img {
+    width: 100%;
+    height: 100%;
+    min-height: inherit;
+    object-fit: cover;
+    display: block;
+}
+
+.hero-slide::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(12, 18, 41, 0.04), rgba(12, 18, 41, 0.2));
+}
+
+.hero-slider__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.hero-slider__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 82px;
+    min-height: 42px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.08);
+    color: #f8f2eb;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.22s ease, background 0.22s ease, border-color 0.22s ease;
+}
+
+.hero-slider__button:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.hero-slider__button--accent {
+    border-color: rgba(255, 184, 104, 0.24);
+    background: linear-gradient(135deg, #ffb36c, #ff7a1a);
+    color: #21130b;
+}
+
+.hero-slider__button--accent:hover {
+    background: linear-gradient(135deg, #ffc58d, #ff8a26);
+}
+
+.hero-slider__dots {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.hero-slider__dot {
+    width: 10px;
+    height: 10px;
+    padding: 0;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.28);
+    cursor: pointer;
+    transition: transform 0.22s ease, background 0.22s ease;
+}
+
+.hero-slider__dot.is-active {
+    transform: scale(1.25);
+    background: #ffab5c;
+}
+
+.content-panel {
+    display: grid;
+    gap: 24px;
+}
+
+.placement-dashboard {
+    background:
+        radial-gradient(circle at top right, rgba(255, 157, 74, 0.18), transparent 28%),
+        linear-gradient(140deg, rgba(12, 19, 39, 0.96), rgba(25, 21, 47, 0.94));
+    color: #f8f2eb;
+}
+
+.placement-dashboard .section-title,
+.placement-dashboard .section-subtitle {
+    color: #f8f2eb;
+}
+
+.placement-dashboard .section-subtitle {
+    max-width: 720px;
+    opacity: 0.76;
+}
+
+.recruiter-wall-section {
+    background:
+        radial-gradient(circle at right top, rgba(255, 185, 104, 0.2), transparent 25%),
+        linear-gradient(135deg, rgba(253, 248, 242, 0.98), rgba(245, 236, 226, 0.94));
+}
+
+.section-block {
+    padding: 28px;
+    border-radius: 28px;
+    border: 1px solid rgba(31, 24, 17, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.internships-section {
+    background: linear-gradient(135deg, rgba(255, 247, 236, 0.96), rgba(250, 229, 208, 0.92));
+}
+
+.placements-section {
+    background: linear-gradient(135deg, rgba(247, 241, 236, 0.92), rgba(235, 228, 245, 0.9));
+}
+
+.section-head {
+    margin-bottom: 18px;
+}
+
+.section-subtitle {
+    margin-top: 10px;
+}
+
+.pulse-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.pulse-card {
+    padding: 20px;
+    border-radius: 24px;
+    background:
+        linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.pulse-card--accent {
+    background:
+        radial-gradient(circle at top right, rgba(255, 186, 110, 0.26), transparent 34%),
+        linear-gradient(160deg, rgba(255, 178, 103, 0.18), rgba(255, 255, 255, 0.08));
+    border-color: rgba(255, 191, 124, 0.3);
+}
+
+.pulse-card__label {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255, 219, 183, 0.82);
+}
+
+.pulse-card__value {
+    display: block;
+    margin-top: 12px;
+    font-family: "Cormorant Garamond", serif;
+    font-size: 46px;
+    line-height: 0.92;
+    color: #fff8f0;
+}
+
+.pulse-card__note {
+    margin: 12px 0 0;
+    color: rgba(248, 242, 235, 0.72);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.recruiter-wall {
+    display: grid;
+    gap: 14px;
+}
+
+.recruiter-row {
+    display: grid;
+    grid-template-columns: minmax(180px, 1.2fr) minmax(180px, 2fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(39, 27, 16, 0.08);
+    box-shadow: 0 16px 30px rgba(18, 18, 34, 0.06);
+}
+
+.recruiter-row__company {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.recruiter-row__company strong {
+    color: #231813;
+    font-size: 18px;
+    line-height: 1.2;
+}
+
+.recruiter-row__rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffce99, #ff8f33);
+    color: #2b1608;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+}
+
+.recruiter-row__bar-wrap {
+    height: 14px;
+    border-radius: 999px;
+    background: rgba(39, 27, 16, 0.08);
+    overflow: hidden;
+}
+
+.recruiter-row__bar {
+    height: 100%;
+    min-width: 8%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #ff9b42, #ff6b1a);
+    box-shadow: 0 0 18px rgba(255, 122, 26, 0.28);
+}
+
+.recruiter-row__metric {
+    display: grid;
+    justify-items: end;
+    color: #4d3f35;
+}
+
+.recruiter-row__metric strong {
+    font-size: 28px;
+    line-height: 1;
+    color: #201611;
+}
+
+.recruiter-row__metric span {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.dashboard-empty {
+    color: inherit;
+    opacity: 0.72;
+}
+
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.filter-row select {
+    width: auto;
+    min-width: 180px;
+}
+
+.placements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+}
+
+.placements-grid > h3 {
+    grid-column: 1 / -1;
+    font-family: "Cormorant Garamond", serif;
+    font-size: 34px;
+    line-height: 0.95;
+    color: #201923;
+    margin: 8px 0 2px;
+}
+
+.placement-card {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    min-height: 0;
+    padding: 18px;
+    border-radius: 24px;
+    background:
+        radial-gradient(circle at top right, rgba(255, 195, 129, 0.22), transparent 34%),
+        linear-gradient(160deg, rgba(255, 255, 255, 0.96), rgba(249, 240, 232, 0.92));
+    border: 1px solid rgba(43, 31, 19, 0.08);
+    box-shadow:
+        0 20px 38px rgba(13, 16, 32, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.placement-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, #ff8a1f, #ffba6b);
+}
+
+.placement-card:hover {
+    transform: translateY(-6px);
+    box-shadow:
+        0 28px 48px rgba(13, 16, 32, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    border-color: rgba(255, 122, 26, 0.18);
+}
+
+.placement-card--internship {
+    background:
+        radial-gradient(circle at top right, rgba(115, 162, 255, 0.18), transparent 34%),
+        linear-gradient(160deg, rgba(255, 255, 255, 0.96), rgba(237, 245, 255, 0.94));
+}
+
+.placement-card--internship::before {
+    background: linear-gradient(90deg, #4f88ff, #90b7ff);
+}
+
+.placement-card--highlight {
+    background:
+        radial-gradient(circle at top right, rgba(133, 95, 223, 0.16), transparent 36%),
+        linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(241, 236, 255, 0.94));
+}
+
+.placement-card--highlight::before {
+    background: linear-gradient(90deg, #7b61d1, #b8a8ff);
+}
+
+.placement-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.placement-card__year {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(24, 19, 23, 0.06);
+    color: #2f2831;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.placement-card h3 {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 32px;
+    line-height: 0.96;
+    margin: 0;
+    color: #1f1822;
+}
+
+.placement-card p {
+    color: #5b5561;
+    margin: 0;
+}
+
+.placement-company {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #a04a02;
+}
+
+.placement-role {
+    font-size: 14px;
+    font-weight: 700;
+    color: #2c2430;
+}
+
+.placement-summary {
+    font-size: 14px;
+    line-height: 1.55;
+    color: #5b5561;
+}
+
+.placement-metric {
+    display: inline-grid;
+    gap: 2px;
+    width: fit-content;
+    padding: 10px 12px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px solid rgba(255, 153, 67, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.placement-card--internship .placement-metric {
+    border-color: rgba(79, 136, 255, 0.22);
+}
+
+.placement-card--highlight .placement-metric {
+    border-color: rgba(123, 97, 209, 0.22);
+}
+
+.placement-metric__label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #7f6f63;
+}
+
+.placement-metric__value {
+    font-size: 20px;
+    line-height: 1;
+    color: #1b1417;
+}
+
+.placement-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+    padding-top: 2px;
+}
+
+.placement-meta__item {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(44, 36, 48, 0.06);
+    color: #3e3744;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.category {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.category.student {
+    background: rgba(255, 122, 26, 0.14);
+    color: #9a4700;
+}
+
+.category.department {
+    background: rgba(66, 74, 179, 0.12);
+    color: #323f98;
+}
+
+@media (max-width: 640px) {
+    .hero-slider__viewport {
+        min-height: 250px;
+    }
+
+    .hero-slider__controls {
+        justify-content: center;
+    }
+
+    .section-block {
+        padding: 20px;
+    }
+
+    .pulse-card__value {
+        font-size: 38px;
+    }
+
+    .recruiter-row {
+        grid-template-columns: 1fr;
+        align-items: start;
+    }
+
+    .recruiter-row__metric {
+        justify-items: start;
+    }
+
+    .placement-card {
+        padding: 16px;
+    }
+
+    .placement-card h3 {
+        font-size: 28px;
+    }
+
+    .placement-card__top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

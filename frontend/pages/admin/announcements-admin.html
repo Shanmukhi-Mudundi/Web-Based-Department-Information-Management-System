@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Announcements | Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <header class="admin-header">
+      <div class="admin-brand">
+        <h1>Announcements Manager</h1>
+        <p>Create, update, and remove department notices with better structure and visibility.</p>
+      </div>
+      <nav class="admin-nav">
+        <a href="./dashboard.html">Dashboard</a>
+        <a class="active" href="./announcements-admin.html">Announcements</a>
+        <a href="./achievements-admin.html">Achievements</a>
+        <a href="./timetables-admin.html">Timetables</a>
+        <a href="./weekly-reports-admin.html">Weekly Reports</a>
+        <a href="./complaints-admin.html">Complaints</a>
+        <a href="../index.html">Back to Site</a>
+        <a href="#" id="logoutBtn">Logout</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-grid">
+      <div class="hero-copy">
+        <div>
+          <p class="eyebrow">Notice Publishing</p>
+          <h2>Post a new announcement.</h2>
+        </div>
+        <p>Use this page to publish timely notices, mark high-priority items, and keep the announcements feed current.</p>
+        <div class="chip-row">
+          <span class="chip">Important alerts</span>
+          <span class="chip">Date-aware feed</span>
+          <span class="chip">Delete outdated notices</span>
+        </div>
+      </div>
+      
+    </section>
+
+    <section class="content-grid">
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Create Entry</p>
+              <h3>Announcement composer</h3>
+            </div>
+            <p>Titles and tags should be short, while the message area carries the full instruction or update.</p>
+          </div>
+          <form id="announcementForm">
+            <div class="form-grid">
+              <div>
+                <label for="title">Title</label>
+                <input id="title" name="title" required placeholder="Mid-Sem Exam Schedule">
+              </div>
+              <div>
+                <label for="tag">Tag (e.g., IMPORTANT)</label>
+                <input id="tag" name="tag" placeholder="NOTICE">
+              </div>
+              <div>
+                <label for="postedAt">Posted Date</label>
+                <input id="postedAt" name="postedAt" type="date">
+              </div>
+              <div>
+                <label for="important">Important</label>
+                <select id="important" name="important">
+                  <option value="false">Normal</option>
+                  <option value="true">Important</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-block">
+              <label for="body">Message</label>
+              <textarea id="body" name="body" required placeholder="Write the full announcement here..."></textarea>
+            </div>
+            <div class="meta-row">
+              <button class="btn" type="submit">Publish Announcement</button>
+              <button class="btn btn-outline" type="reset">Clear</button>
+            </div>
+            <p id="status" class="status"></p>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Current Records</p>
+              <h3>Saved announcements</h3>
+            </div>
+            <p>Review recent posts before deleting. This table reflects the records returned from the announcements API.</p>
+          </div>
+          <div class="table-wrap">
+            <table class="table" id="announcementTable">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Tag</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="note">If the API is not reachable, entries will fail to load or update.</p>
+        </section>
+      </div>
+
+      <aside class="side-panel">
+        <div class="side-block">
+          <p class="eyebrow">Checklist</p>
+          <h3>Publishing checklist</h3>
+          <ul class="info-list">
+            <li>Use a title that states the action or event clearly.</li>
+            <li>Add a tag only when it helps users scan the feed faster.</li>
+            <li>Mark the notice as important only for genuinely high-priority updates.</li>
+          </ul>
+        </div>
+        
+      </aside>
+    </section>
+  </div>
+
+  <script>
+    const API_BASE =
+      document.querySelector('meta[name="api-base"]')?.getAttribute("content")?.trim() ||
+      "http://localhost:8081";
+
+    const statusEl = document.getElementById("status");
+    const tableBody = document.querySelector("#announcementTable tbody");
+
+    function setStatus(message, type) {
+      statusEl.textContent = message;
+      statusEl.className = "status" + (type ? " " + type : "");
+    }
+
+    function formatDate(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleDateString();
+    }
+
+    function createBadge(text) {
+      const badge = document.createElement("span");
+      badge.className = "badge";
+      badge.textContent = text;
+      return badge;
+    }
+
+    function renderRow(item) {
+      const row = document.createElement("tr");
+      const resolvedId = item.id || item._id || item.ID || item.Id;
+      const title = document.createElement("td");
+      title.textContent = item.title || "Untitled";
+      const tag = document.createElement("td");
+      tag.appendChild(createBadge(item.tag || (item.important ? "IMPORTANT" : "NOTICE")));
+      const date = document.createElement("td");
+      date.textContent = formatDate(item.postedAt);
+      const actions = document.createElement("td");
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "btn btn-danger";
+      deleteBtn.textContent = "Delete";
+      deleteBtn.disabled = !resolvedId;
+      deleteBtn.addEventListener("click", () => removeAnnouncement(resolvedId));
+      actions.appendChild(deleteBtn);
+
+      row.append(title, tag, date, actions);
+      tableBody.appendChild(row);
+    }
+
+    function parseDateValue(value) {
+      if (!value) return null;
+      if (typeof value === "number") return value;
+      let raw = String(value).trim();
+      if (!raw) return null;
+      raw = raw.replace(/^posted on:\s*/i, "");
+      const parsed = Date.parse(raw);
+      if (!Number.isNaN(parsed)) return parsed;
+      return null;
+    }
+
+    async function loadAnnouncements() {
+      tableBody.replaceChildren();
+      try {
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/announcements");
+        if (!res.ok) throw new Error("Bad response");
+        const data = await res.json();
+        const items = Array.isArray(data?.items)
+          ? data.items
+          : Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data)
+              ? data
+              : [];
+        if (items.length === 0) {
+          const emptyRow = document.createElement("tr");
+          const emptyCell = document.createElement("td");
+          emptyCell.colSpan = 4;
+          emptyCell.textContent = "No announcements available.";
+          emptyRow.appendChild(emptyCell);
+          tableBody.appendChild(emptyRow);
+          return;
+        }
+        const sorted = items
+          .map((item, index) => ({
+            item,
+            index,
+            time: parseDateValue(item?.postedAt || item?.date || item?.createdAt)
+          }))
+          .sort((a, b) => {
+            if (a.time === null && b.time === null) return b.index - a.index;
+            if (a.time === null) return 1;
+            if (b.time === null) return -1;
+            return b.time - a.time;
+          })
+          .map(entry => entry.item);
+        sorted.forEach(renderRow);
+      } catch (err) {
+        setStatus("Unable to load announcements. Check the API connection.", "error");
+      }
+    }
+
+    async function removeAnnouncement(id) {
+      if (!id) return;
+      try {
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/announcements/" + id, {
+          method: "DELETE"
+        });
+        if (!res.ok) throw new Error("Delete failed");
+        setStatus("Announcement deleted.", "success");
+        loadAnnouncements();
+      } catch (err) {
+        setStatus("Delete failed. Confirm the API endpoint.", "error");
+      }
+    }
+
+    document.getElementById("announcementForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const title = document.getElementById("title").value.trim();
+      const body = document.getElementById("body").value.trim();
+      const tag = document.getElementById("tag").value.trim();
+      const important = document.getElementById("important").value === "true";
+      const postedAtInput = document.getElementById("postedAt").value;
+      const postedAt = postedAtInput ? new Date(postedAtInput).toISOString() : new Date().toISOString();
+
+      const payload = { title, body, tag, important, postedAt };
+
+      try {
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/announcements", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error("Create failed");
+        setStatus("Announcement published successfully.", "success");
+        event.target.reset();
+        loadAnnouncements();
+      } catch (err) {
+        setStatus("Publish failed. Check the API endpoint.", "error");
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", loadAnnouncements);
+  </script>
+  <script type="module" src="../../assets/js/admin-guard.js"></script>
+</body>
+</html>

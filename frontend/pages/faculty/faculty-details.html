@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Details | CSE (AI & ML)</title>
+    <meta name="api-base" content="http://localhost:8081">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/faculty-page.css">
+</head>
+
+<body class="theme-page faculty-page" data-page="faculty">
+
+    <iframe
+        class="site-chrome site-chrome--header"
+        src="../../components/header.html"
+        scrolling="no">
+    </iframe>
+
+    <main class="page-shell">
+        <section class="page-hero">
+            <div class="page-hero__layout">
+                <div>
+                    <h1>Faculty Details</h1>
+                    <div class="page-hero__actions">
+                        <a href="../index.html" class="ghost-button">Back Home</a>
+                        <a href="#facultyGrid" class="cta-button">Browse Faculty</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="content-panel">
+            <div class="section-intro">
+                <div>
+                    <h2>Faculty details</h2>
+                </div>
+            </div>
+
+            <section class="faculty-container" id="facultyGrid">
+                <p class="empty-state">Loading faculty profiles...</p>
+            </section>
+        </section>
+    </main>
+
+    <div class="faculty-modal" id="facultyModal" aria-hidden="true">
+        <div class="faculty-modal__backdrop" data-close-modal></div>
+        <div class="faculty-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="facultyModalTitle">
+            <button class="faculty-modal__close" id="facultyModalClose" type="button" aria-label="Close faculty details">&times;</button>
+            <div class="faculty-modal__content">
+                <div class="faculty-modal__media">
+                    <img id="facultyModalImage" src="" alt="Faculty photo">
+                </div>
+                <div class="faculty-modal__body">
+                    <h3 id="facultyModalTitle">Faculty</h3>
+                    <p class="faculty-modal__designation" id="facultyModalDesignation"></p>
+                    <div class="faculty-modal__details" id="facultyModalDetails"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <iframe
+        class="site-chrome site-chrome--footer"
+        src="../../components/footer.html"
+        scrolling="no">
+    </iframe>
+
+<script>
+const API_BASE =
+    document.querySelector('meta[name="api-base"]')?.getAttribute("content")?.trim() ||
+    "http://localhost:8081";
+
+function normalizeList(data) {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.items)) return data.items;
+    if (Array.isArray(data?.data)) return data.data;
+    return [];
+}
+
+function getFallbackFacultyImage(name) {
+    const label = (name || "Faculty")
+        .toString()
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map(part => part.charAt(0).toUpperCase())
+        .join("") || "FC";
+
+    const svg =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">' +
+        '<defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1">' +
+        '<stop stop-color="#1a1730"/><stop offset="1" stop-color="#ff7a1a"/></linearGradient></defs>' +
+        '<rect width="400" height="400" rx="48" fill="url(#g)"/>' +
+        '<circle cx="200" cy="150" r="72" fill="rgba(255,255,255,0.18)"/>' +
+        '<path d="M100 336c18-58 64-92 100-92s82 34 100 92" fill="rgba(255,255,255,0.18)"/>' +
+        '<text x="200" y="374" font-family="Manrope, Arial, sans-serif" font-size="52" font-weight="800" text-anchor="middle" fill="#fff7ef">' + label + "</text>" +
+        "</svg>";
+
+    return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+}
+
+function isLikelyBase64ImagePayload(value) {
+    const normalized = String(value || "").trim().replace(/\s+/g, "");
+    if (!normalized || normalized.length < 120) return false;
+    return /^[A-Za-z0-9+/=]+$/.test(normalized);
+}
+
+function isSafeFacultyImageUrl(value) {
+    try {
+        const url = new URL(value, window.location.href);
+        const pathname = url.pathname.toLowerCase();
+        const hostname = url.hostname.toLowerCase();
+        const allowedExtensions = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", ".bmp", ".avif"];
+        const hasImageExtension = allowedExtensions.some(ext => pathname.endsWith(ext));
+        const isLocalUpload = pathname.startsWith("/uploads/faculty/") || pathname.startsWith("/uploads/");
+        const isKnownImageHost =
+            hostname.includes("firebasestorage") ||
+            hostname.includes("googleusercontent.com") ||
+            hostname.includes("storage.googleapis.com");
+
+        return isLocalUpload || hasImageExtension || isKnownImageHost;
+    } catch (error) {
+        return false;
+    }
+}
+
+function getFacultyImageSrc(item) {
+    const facultyName = item.name || item.facultyName || "Faculty";
+    const photoValue = item.photoUrl || item.photoURL || item.imageUrl || item.photoPath || item.photoBase64 || item.photo || item.image || item.photoData;
+    if (photoValue) {
+        const trimmed = String(photoValue).trim();
+        if (trimmed.startsWith("data:image")) {
+            return trimmed;
+        }
+        if ((trimmed.startsWith("http://") || trimmed.startsWith("https://")) && isSafeFacultyImageUrl(trimmed)) {
+            return trimmed;
+        }
+        if (trimmed.startsWith("/") && isSafeFacultyImageUrl(API_BASE.replace(/\/$/, "") + trimmed)) {
+            return API_BASE.replace(/\/$/, "") + trimmed;
+        }
+        if (isLikelyBase64ImagePayload(trimmed)) {
+            return "data:image/jpeg;base64," + trimmed;
+        }
+    }
+    return getFallbackFacultyImage(facultyName);
+}
+
+function createDetailItem(label, value) {
+    if (value === undefined || value === null || String(value).trim() === "") return null;
+    const item = document.createElement("div");
+    item.className = "faculty-modal__detail";
+
+    const title = document.createElement("span");
+    title.textContent = label;
+
+    const text = document.createElement("strong");
+    text.textContent = String(value).trim();
+
+    item.append(title, text);
+    return item;
+}
+
+function buildFacultyDetails(item) {
+    const details = [];
+    const qualifications = [item.phd && "PhD: " + item.phd, item.mtech && "M.Tech: " + item.mtech, item.btech && "B.Tech: " + item.btech]
+        .filter(Boolean)
+        .join(" | ");
+    const ids = [item.aicteId && "AICTE: " + item.aicteId, item.jntuhId && "JNTUH: " + item.jntuhId, item.ratifiedStatus && "Ratified: " + item.ratifiedStatus]
+        .filter(Boolean)
+        .join(" | ");
+
+    const researchIdsSource = item.researchIdentifiers || {};
+    const researchIds = [
+        researchIdsSource.scopus && "Scopus: " + researchIdsSource.scopus,
+        researchIdsSource.wos && "WOS: " + researchIdsSource.wos,
+        researchIdsSource.googleScholar && "Google Scholar: " + researchIdsSource.googleScholar,
+        researchIdsSource.vidwan && "Vidwan: " + researchIdsSource.vidwan,
+        researchIdsSource.orcid && "ORCID: " + researchIdsSource.orcid
+    ].filter(Boolean).join(" | ");
+
+    const pairs = [
+        ["Teaching Experience", item.teachingExperience || item.experience],
+        ["Research Experience", item.researchExperience],
+        ["Industry Experience", item.industryExperience],
+        ["Specialization", item.specialization || item.education],
+        ["Email", item.email],
+        ["Qualifications", qualifications],
+        ["IDs", ids],
+        ["Research IDs", researchIds]
+    ];
+
+    pairs.forEach(([label, value]) => {
+        const detail = createDetailItem(label, value || "N/A");
+        if (detail) details.push(detail);
+    });
+
+    return details;
+}
+
+const facultyModal = document.getElementById("facultyModal");
+const facultyModalImage = document.getElementById("facultyModalImage");
+const facultyModalTitle = document.getElementById("facultyModalTitle");
+const facultyModalDesignation = document.getElementById("facultyModalDesignation");
+const facultyModalDetails = document.getElementById("facultyModalDetails");
+
+function openFacultyModal(item) {
+    if (!facultyModal || !facultyModalImage || !facultyModalTitle || !facultyModalDesignation || !facultyModalDetails) return;
+
+    const facultyName = item.name || item.facultyName || "Faculty";
+    facultyModalTitle.textContent = facultyName;
+    facultyModalDesignation.textContent = item.designation || item.role || "Designation";
+    facultyModalImage.src = getFacultyImageSrc(item);
+    facultyModalImage.alt = facultyName + " photo";
+    facultyModalImage.onerror = () => {
+        facultyModalImage.onerror = null;
+        facultyModalImage.src = getFallbackFacultyImage(facultyName);
+    };
+
+    facultyModalDetails.innerHTML = "";
+    const details = buildFacultyDetails(item);
+    details.forEach(detail => facultyModalDetails.appendChild(detail));
+
+    facultyModal.classList.add("open");
+    facultyModal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("modal-open");
+    document.getElementById("facultyModalClose")?.focus();
+}
+
+function closeFacultyModal() {
+    if (!facultyModal) return;
+    facultyModal.classList.remove("open");
+    facultyModal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+}
+
+function createFacultyCard(item, index) {
+    const card = document.createElement("div");
+    card.className = "faculty-card";
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.setAttribute("aria-label", "View details for " + (item.name || item.facultyName || "faculty"));
+    card.addEventListener("click", () => openFacultyModal(item));
+    card.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openFacultyModal(item);
+        }
+    });
+
+    const image = document.createElement("img");
+    const facultyName = item.name || item.facultyName || "Faculty";
+    image.src = getFacultyImageSrc(item);
+    image.alt = facultyName + " photo";
+    image.onerror = () => {
+        image.onerror = null;
+        image.src = getFallbackFacultyImage(facultyName);
+    };
+
+    const name = document.createElement("h3");
+    name.textContent = facultyName;
+
+    const designation = document.createElement("p");
+    designation.className = "designation";
+    designation.textContent = item.designation || item.role || "Designation";
+
+    const hint = document.createElement("span");
+    hint.className = "faculty-card__hint";
+    hint.textContent = "View Profile";
+
+    card.append(image, name, designation, hint);
+    return card;
+}
+
+async function loadFaculty() {
+    const container = document.querySelector(".faculty-container");
+    if (!container) return;
+
+    try {
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/faculty");
+        if (!res.ok) throw new Error("Bad response");
+        const data = normalizeList(await res.json());
+        container.innerHTML = "";
+
+        if (data.length === 0) {
+            const empty = document.createElement("p");
+            empty.textContent = "No faculty data available.";
+            container.appendChild(empty);
+            return;
+        }
+
+        const FACULTY_ORDER = [
+            "lakshmi praveena",
+            "indrasena reddy",
+            "naga kalyani",
+            "kishore kumar",
+            "mns gangadhar",
+            "asha",
+            "anusha",
+            "lalitha",
+            "jyothi",
+            "spurthi",
+            "bhargavi",
+            "priyanka",
+            "indu",
+            "shanmukha priya"
+        ];
+
+        function normalizeTokens(name) {
+            if (!name) return [];
+            return name
+                .toLowerCase()
+                .replace(/[.,]/g, " ")
+                .replace(/\b(dr|mr|ms|mrs|prof|professor|hod)\b/g, " ")
+                .replace(/\s+/g, " ")
+                .trim()
+                .split(" ")
+                .filter(Boolean);
+        }
+
+        function getOrderIndex(name) {
+            const tokens = normalizeTokens(name);
+            if (tokens.length === 0) return Number.MAX_SAFE_INTEGER;
+            for (let i = 0; i < FACULTY_ORDER.length; i++) {
+                const orderTokens = FACULTY_ORDER[i].split(" ");
+                const isMatch = orderTokens.every(t => {
+                    if (tokens.includes(t)) return true;
+                    if (/^[a-z]{2,}$/.test(t)) {
+                        const letters = t.split("");
+                        return letters.every(ch => tokens.includes(ch));
+                    }
+                    return false;
+                });
+                if (isMatch) return i;
+            }
+            return Number.MAX_SAFE_INTEGER;
+        }
+
+        const sorted = data
+            .map((item, index) => ({
+                item,
+                index,
+                order: getOrderIndex(item.name || item.facultyName || "")
+            }))
+            .sort((a, b) => {
+                if (a.order !== b.order) return a.order - b.order;
+                return a.index - b.index;
+            })
+            .map(entry => entry.item);
+
+        sorted.forEach((item, index) => container.appendChild(createFacultyCard(item, index)));
+    } catch (err) {
+        console.error("Failed to load faculty:", err);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", loadFaculty);
+document.getElementById("facultyModalClose")?.addEventListener("click", closeFacultyModal);
+document.querySelector("[data-close-modal]")?.addEventListener("click", closeFacultyModal);
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+        closeFacultyModal();
+    }
+});
+</script>
+
+</body>
+</html>

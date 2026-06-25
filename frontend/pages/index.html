@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSE(AI&ML) BVRITH</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+
+<body class="home-page">
+
+  <iframe
+      class="site-chrome site-chrome--header"
+      src="../components/header.html"
+      scrolling="no">
+  </iframe>
+
+  <main class="page-shell">
+    <section class="hero" aria-label="Department highlights">
+      <div class="hero-home">
+        <div class="hero-copy">
+          <h1>Department of CSE (AI & ML)</h1>
+          <p>
+            Announcements, faculty details, placements, reports, timetables, and achievements in one place.
+          </p>
+          <div class="hero-actions">
+            <a class="cta-button" href="./announcements/announcements.html">Explore Updates</a>
+            <a class="ghost-button" href="./faculty/faculty-details.html">Meet Faculty</a>
+          </div>
+        </div>
+
+        <div class="hero-stage">
+          <div class="hero-slider">
+            <div class="slider-track" id="homeSliderTrack">
+              <div class="slide">
+                <img src="../assets/images/img-3.png" alt="Department highlight 1">
+              </div>
+              <div class="slide">
+                <img src="../assets/images/img-4.png" alt="Department highlight 2">
+              </div>
+              <div class="slide">
+                <img src="../assets/images/student-img.png" alt="Department highlight 3">
+              </div>
+              <div class="slide">
+                <img src="../assets/images/image1.png" alt="Department highlight 4">
+              </div>
+              <div class="slide">
+                <img src="../assets/images/image-2.png" alt="Department highlight 5">
+              </div>
+            </div>
+            <div class="slider-controls">
+              <button class="slider-btn prev" type="button" aria-label="Previous slide" data-dir="-1">&#10094;</button>
+              <button class="slider-btn next" type="button" aria-label="Next slide" data-dir="1">&#10095;</button>
+            </div>
+            <div class="slider-dots" id="homeSliderDots">
+              <button class="dot active" type="button" data-slide="0" aria-label="Show slide 1"></button>
+              <button class="dot" type="button" data-slide="1" aria-label="Show slide 2"></button>
+              <button class="dot" type="button" data-slide="2" aria-label="Show slide 3"></button>
+              <button class="dot" type="button" data-slide="3" aria-label="Show slide 4"></button>
+              <button class="dot" type="button" data-slide="4" aria-label="Show slide 5"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-panel department-stats-panel">
+      <div class="section-intro">
+        <div>
+          <h2>Department Stats</h2>
+          <p>Key highlights of the department and student outcomes.</p>
+        </div>
+        <span class="panel-note">At a glance</span>
+      </div>
+
+      <div class="department-stats-grid">
+        <article class="department-stat">
+          <strong>200+</strong>
+          <span>Students</span>
+        </article>
+        <article class="department-stat">
+          <strong>15+</strong>
+          <span>Faculty</span>
+        </article>
+        <article class="department-stat">
+          <strong>4</strong>
+          <span>Labs</span>
+        </article>
+        <article class="department-stat">
+          <strong>AI, ML, DL</strong>
+          <span>Research Areas</span>
+        </article>
+        <article class="department-stat">
+          <strong>ACM</strong>
+          <span>Student Chapter</span>
+        </article>
+        <article class="department-stat">
+          <strong>120+</strong>
+          <span>Placed Students</span>
+        </article>
+        <article class="department-stat">
+          <strong>52 LPA</strong>
+          <span>Highest Package</span>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+  <section class="dept-intro">
+    <div class="card">
+      <div class="intro-header">
+        <div>
+          <h2>Vision & Mission</h2>
+        </div>
+      </div>
+
+      <div class="intro-grid">
+        <div class="vision card">
+          <h3>Vision</h3>
+          <p>
+            Produce competent technocrats, researchers, and entrepreneurs in
+            Artificial Intelligence & Machine Learning to build an ecosystem
+            that significantly contributes to the nation.
+          </p>
+        </div>
+
+        <div class="mission card">
+          <h3>Mission</h3>
+          <ul>
+            <li><strong>M1:</strong> To provide quality education with emphasis on latest technologies as per industrial needs.</li>
+            <li><strong>M2:</strong> To impart research culture, professional ethics and moral values.</li>
+            <li><strong>M3:</strong> To identify real-life problems and evolve effective solutions.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <iframe
+      class="site-chrome site-chrome--footer"
+      src="../components/footer.html"
+      scrolling="no">
+  </iframe>
+
+  <script>
+    (function () {
+      const track = document.getElementById("homeSliderTrack");
+      const dots = document.querySelectorAll("#homeSliderDots .dot");
+      const buttons = document.querySelectorAll(".slider-btn");
+      const slider = track?.closest(".hero-slider");
+      const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+      if (!track || dots.length === 0) return;
+
+      let index = 0;
+      const total = dots.length;
+      let timerId = null;
+
+      function updateSlider(nextIndex) {
+        index = (nextIndex + total) % total;
+        track.style.transform = `translateX(-${index * 100}%)`;
+        dots.forEach((dot, i) => {
+          dot.classList.toggle("active", i === index);
+        });
+      }
+
+      function stopSchedule() {
+        if (timerId) {
+          clearInterval(timerId);
+          timerId = null;
+        }
+      }
+
+      function schedule() {
+        stopSchedule();
+        if (reducedMotionQuery.matches) return;
+        timerId = setInterval(() => updateSlider(index + 1), 5000);
+      }
+
+      dots.forEach(dot => {
+        dot.addEventListener("click", () => {
+          updateSlider(Number(dot.dataset.slide));
+          schedule();
+        });
+      });
+
+      buttons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          updateSlider(index + Number(btn.dataset.dir));
+          schedule();
+        });
+      });
+
+      slider?.addEventListener("mouseenter", stopSchedule);
+      slider?.addEventListener("mouseleave", schedule);
+      slider?.addEventListener("focusin", stopSchedule);
+      slider?.addEventListener("focusout", schedule);
+
+      const handleReducedMotionChange = () => {
+        if (reducedMotionQuery.matches) {
+          stopSchedule();
+        } else {
+          schedule();
+        }
+      };
+
+      if (typeof reducedMotionQuery.addEventListener === "function") {
+        reducedMotionQuery.addEventListener("change", handleReducedMotionChange);
+      } else if (typeof reducedMotionQuery.addListener === "function") {
+        reducedMotionQuery.addListener(handleReducedMotionChange);
+      }
+
+      schedule();
+    })();
+
+  </script>
+</body>
+</html>

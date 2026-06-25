@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Complaints | Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/admin.css">
+</head>
+<body data-admin-scope="complaints">
+  <div class="admin-shell">
+    <header class="admin-header">
+      <div class="admin-brand">
+        <h1>Complaints Access Desk</h1>
+        <p>Review submitted grievances in one protected workspace reserved for authorized complaint reviewers.</p>
+      </div>
+      <nav class="admin-nav">
+        <a href="./dashboard.html">Dashboard</a>
+        <a href="./announcements-admin.html">Announcements</a>
+        <a href="./achievements-admin.html">Achievements</a>
+        <a href="./timetables-admin.html">Timetables</a>
+        <a href="./weekly-reports-admin.html">Weekly Reports</a>
+        <a class="active" href="./complaints-admin.html">Complaints</a>
+        <a href="../index.html">Back to Site</a>
+        <a href="#" id="logoutBtn">Logout</a>
+      </nav>
+    </header>
+
+    <section class="hero hero-grid">
+      <div class="hero-copy">
+        <div>
+          <p class="eyebrow">Protected Review</p>
+          <h2>Read student and staff concerns securely.</h2>
+        </div>
+        <p>This workspace is meant for sensitive grievance review. It lists complaint category, contact details, message text, and submission time when available.</p>
+        <div class="chip-row">
+          <span class="chip">Restricted access</span>
+          <span class="chip">Complaint timeline</span>
+          <span class="chip">Legacy-safe rendering</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-grid">
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Complaint Feed</p>
+              <h3>Submitted complaints</h3>
+            </div>
+            <p>Use refresh to pull the latest entries from the complaints API. Older records with partial fields still appear safely.</p>
+          </div>
+          <div class="meta-row">
+            <button class="btn" type="button" id="refreshBtn">Refresh Complaints</button>
+            <p id="status" class="status"></p>
+          </div>
+          <div class="table-wrap" style="margin-top: 16px;">
+            <table class="table" id="complaintsTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Category</th>
+                  <th>Contact</th>
+                  <th>Complaint</th>
+                  <th>Submitted</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="note">Some older complaint records may only show name and legacy fields because they were saved before the backend model update.</p>
+        </section>
+      </div>
+
+      <aside class="side-panel">
+        <div class="side-block">
+          <p class="eyebrow">Access Policy</p>
+          <h3>Restricted reviewers only</h3>
+          <ul class="info-list">
+            <li>Only approved reviewer emails can open this page.</li>
+            <li>All other admin users are redirected back to the dashboard.</li>
+            <li>Keep complaint details confidential when sharing follow-up updates.</li>
+          </ul>
+        </div>
+      </aside>
+    </section>
+  </div>
+
+  <script>
+    const API_BASE =
+      document.querySelector('meta[name="api-base"]')?.getAttribute("content")?.trim() ||
+      "http://localhost:8081";
+
+    const statusEl = document.getElementById("status");
+    const tableBody = document.querySelector("#complaintsTable tbody");
+    const refreshBtn = document.getElementById("refreshBtn");
+
+    function setStatus(message, type) {
+      statusEl.textContent = message;
+      statusEl.className = "status" + (type ? " " + type : "");
+    }
+
+    function getSubmittedValue(item) {
+      return item.submittedAt || item.date || item.createdAt || "";
+    }
+
+    function formatSubmitted(value) {
+      if (!value) return "-";
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) return String(value);
+      return parsed.toLocaleString();
+    }
+
+    function getComplaintText(item) {
+      return item.details || item.message || "-";
+    }
+
+    function renderRow(item) {
+      const row = document.createElement("tr");
+      const cells = [
+        item.name || "Anonymous",
+        item.role || "-",
+        item.category || "-",
+        item.contact || "-",
+        getComplaintText(item),
+        formatSubmitted(getSubmittedValue(item))
+      ];
+
+      cells.forEach((value) => {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        row.appendChild(cell);
+      });
+
+      tableBody.appendChild(row);
+    }
+
+    function normalizeItems(data) {
+      if (Array.isArray(data?.items)) return data.items;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    }
+
+    function sortItems(items) {
+      return [...items].sort((a, b) => {
+        const aTime = Date.parse(getSubmittedValue(a) || "");
+        const bTime = Date.parse(getSubmittedValue(b) || "");
+        if (Number.isNaN(aTime) && Number.isNaN(bTime)) return 0;
+        if (Number.isNaN(aTime)) return 1;
+        if (Number.isNaN(bTime)) return -1;
+        return bTime - aTime;
+      });
+    }
+
+    async function loadComplaints() {
+      tableBody.replaceChildren();
+      setStatus("Loading complaints...", "");
+      refreshBtn.disabled = true;
+
+      try {
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/complaints");
+        if (!res.ok) throw new Error("Bad response");
+
+        const data = await res.json();
+        const items = sortItems(normalizeItems(data));
+
+        if (items.length === 0) {
+          const emptyRow = document.createElement("tr");
+          const emptyCell = document.createElement("td");
+          emptyCell.colSpan = 6;
+          emptyCell.textContent = "No complaints available.";
+          emptyRow.appendChild(emptyCell);
+          tableBody.appendChild(emptyRow);
+          setStatus("No complaints found.", "");
+          return;
+        }
+
+        items.forEach(renderRow);
+        setStatus("Complaints loaded successfully.", "success");
+      } catch (err) {
+        setStatus("Unable to load complaints. Check the API connection.", "error");
+      } finally {
+        refreshBtn.disabled = false;
+      }
+    }
+
+    refreshBtn.addEventListener("click", loadComplaints);
+    document.addEventListener("DOMContentLoaded", loadComplaints);
+  </script>
+  <script type="module" src="../../assets/js/admin-guard.js"></script>
+</body>
+</html>

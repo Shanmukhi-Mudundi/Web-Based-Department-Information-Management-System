@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Reports | CSE (AI & ML)</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/weekly-reports.css">
+</head>
+<body class="theme-page weekly-reports-page">
+
+<iframe
+    class="site-chrome site-chrome--header"
+    src="../components/header.html"
+    scrolling="no">
+</iframe>
+
+<main class="page-shell">
+    <section class="page-hero">
+        <div class="page-hero__layout">
+            <div>
+                <h1>Weekly Reports</h1>
+                <div class="page-hero__actions">
+                    <a href="index.html" class="ghost-button">Back Home</a>
+                    <a href="#reportsList" class="cta-button">Read Reports</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content-panel">
+        <section class="reports-list" id="reportsList">
+            <p>Loading weekly reports...</p>
+        </section>
+    </section>
+</main>
+
+<iframe
+    class="site-chrome site-chrome--footer"
+    src="../components/footer.html"
+    scrolling="no">
+</iframe>
+
+<script>
+const API_BASE =
+    document.querySelector('meta[name="api-base"]')?.getAttribute("content")?.trim() ||
+    "http://localhost:8081";
+
+function normalizeList(data) {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.items)) return data.items;
+    if (Array.isArray(data?.data)) return data.data;
+    return [];
+}
+
+function toBulletItems(description) {
+    if (!description) return [];
+    const parts = description
+        .split(/\r?\n|;|•/g)
+        .map(p => p.trim())
+        .filter(Boolean);
+    return parts.length > 0 ? parts : [description.trim()];
+}
+
+function buildReportDetails(item) {
+    const details = [];
+
+    if (item.type) details.push("Type: " + item.type.replace(/_/g, " "));
+    if (item.department) details.push("Department: " + item.department);
+    if (item.resourcePerson) details.push("Resource Person: " + item.resourcePerson);
+    if (item.coordinator) details.push("Coordinator: " + item.coordinator);
+    if (item.facultyInCharge) details.push("Faculty In-charge: " + item.facultyInCharge);
+    if (item.facultyName) details.push("Faculty: " + item.facultyName);
+    if (item.participants !== undefined && item.participants !== null && item.participants !== "") {
+        details.push("Participants: " + item.participants);
+    }
+    if (item.students !== undefined && item.students !== null && item.students !== "") {
+        details.push("Students: " + item.students);
+    }
+    if (item.sessions !== undefined && item.sessions !== null && item.sessions !== "") {
+        details.push("Sessions: " + item.sessions);
+    }
+
+    return details;
+}
+
+function buildExtraDetails(item) {
+    const details = [];
+    const skipNormalized = new Set([
+        "_id",
+        "id",
+        "title",
+        "event",
+        "program",
+        "description",
+        "details",
+        "topic",
+        "date",
+        "type",
+        "department",
+        "resourceperson",
+        "coordinator",
+        "facultyincharge",
+        "facultyname",
+        "participants",
+        "students",
+        "sessions"
+    ]);
+
+    const formatKey = (key) => {
+        const spaced = key
+            .replace(/_/g, " ")
+            .replace(/([a-z])([A-Z])/g, "$1 $2")
+            .replace(/\s+/g, " ")
+            .trim();
+        return spaced.replace(/\b\w/g, (c) => c.toUpperCase());
+    };
+
+    Object.entries(item || {}).forEach(([key, value]) => {
+        const normalized = key.toLowerCase().replace(/[\s_]+/g, "");
+        if (skipNormalized.has(normalized)) return;
+        if (value === undefined || value === null) return;
+        const text = String(value).trim();
+        if (!text) return;
+        details.push(formatKey(key) + ": " + text);
+    });
+
+    return details;
+}
+
+function createReportCard(item) {
+    const card = document.createElement("article");
+    card.className = "report-card";
+
+    const tag = document.createElement("div");
+    tag.className = "week-tag";
+    tag.textContent = item.date ? "Weekly Report • " + item.date : "Weekly Report";
+
+    const title = document.createElement("h2");
+    title.textContent =
+        item.title ||
+        item.event ||
+        item.program ||
+        "Weekly Update";
+
+    const list = document.createElement("ul");
+    const baseDescription =
+        item.description ||
+        item.details ||
+        item.topic ||
+        "";
+    const bullets = toBulletItems(baseDescription);
+    const meta = buildReportDetails(item);
+    const extra = buildExtraDetails(item);
+    const finalBullets = [...bullets, ...meta, ...extra];
+    if (finalBullets.length === 0) {
+        const li = document.createElement("li");
+        li.textContent = "No details provided.";
+        list.appendChild(li);
+    } else {
+        finalBullets.forEach(text => {
+            const li = document.createElement("li");
+            li.textContent = text;
+            list.appendChild(li);
+        });
+    }
+
+    card.append(tag, title, list);
+    return card;
+}
+
+async function loadWeeklyReports() {
+    const list = document.querySelector(".reports-list");
+    if (!list) return;
+
+    try {
+        const res = await fetch(API_BASE.replace(/\/$/, "") + "/api/weeklyreports/raw");
+        if (!res.ok) throw new Error("Bad response");
+        const data = normalizeList(await res.json());
+        list.innerHTML = "";
+
+        if (data.length === 0) {
+            const empty = document.createElement("p");
+            empty.textContent = "No weekly reports available.";
+            list.appendChild(empty);
+            return;
+        }
+
+        data.forEach(item => list.appendChild(createReportCard(item)));
+    } catch (err) {
+        console.error("Failed to load weekly reports:", err);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", loadWeeklyReports);
+</script>
+
+</body>
+</html>
